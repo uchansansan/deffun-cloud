@@ -1,0 +1,6 @@
+applicationType: default
+defaultPackage: io.deffun
+testFramework: junit
+sourceLanguage: java
+buildTool: maven
+features: [annotation-api, app-name, data, data-jpa, flyway, graphql, http-client, jackson-databind, java, java-application, jdbc-hikari, junit, logback, mariadb, maven, netty-server, readme, shade, test-resources, yaml]

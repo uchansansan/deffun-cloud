@@ -1,0 +1,29 @@
+type Query {
+    projects: [Project!]!
+}
+
+type Mutation {
+    createProject(schema: String!, name: String!, domain: String, framework: Framework, database: Database): Project!
+}
+
+type Project {
+    id: ID!
+    name: String!
+    domain: String!
+    sourceCodeUrl: String!
+    endpointUrl: String!
+    user: User!
+}
+
+type User {
+    id: ID!
+    username: String!
+}
+
+enum Database {
+    MYSQL, MARIA_DB, PG
+}
+
+enum Framework {
+    MICRONAUT
+}
