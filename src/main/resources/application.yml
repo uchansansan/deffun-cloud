@@ -1,17 +1,30 @@
 micronaut:
   application:
     name: deffunCloud
+#datasources:
+#  default:
+#    driverClassName: org.mariadb.jdbc.Driver
+#    db-type: mariadb
+#    dialect: MYSQL
 datasources:
   default:
-    driverClassName: org.mariadb.jdbc.Driver
-    db-type: mariadb
-    dialect: MYSQL
+    url: jdbc:h2:mem:devDb
+    driverClassName: org.h2.Driver
+    username: sa
+    password: ''
+    schema-generate: CREATE_DROP
+    dialect: H2
 jpa:
   default:
+    entity-scan:
+      packages: io.deffun
     properties:
       hibernate:
         hbm2ddl:
-          auto: none
+          auto: create-drop
+graphql:
+  graphiql:
+    enabled: true
 netty:
   default:
     allocator:
