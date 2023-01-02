@@ -19,7 +19,8 @@ import java.io.InputStreamReader;
 public class GraphQLFactory {
     @Singleton
     public GraphQL graphQL(ResourceResolver resourceResolver,
-                           ProjectsDataFetcher projectsDataFetcher) {
+                           ProjectsDataFetcher projectsDataFetcher,
+                           CreateProjectDataFetcher createProjectDataFetcher) {
         SchemaParser schemaParser = new SchemaParser();
         SchemaGenerator schemaGenerator = new SchemaGenerator();
 
@@ -32,6 +33,7 @@ public class GraphQLFactory {
 
         RuntimeWiring runtimeWiring = RuntimeWiring.newRuntimeWiring()
                 .type("Query", typeWiring -> typeWiring.dataFetcher("projects", projectsDataFetcher))
+                .type("Mutation", typeWiring -> typeWiring.dataFetcher("createProject", createProjectDataFetcher))
                 .build();
 
         GraphQLSchema graphQLSchema = schemaGenerator.makeExecutableSchema(typeRegistry, runtimeWiring);

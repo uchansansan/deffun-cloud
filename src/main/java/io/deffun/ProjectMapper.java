@@ -21,4 +21,11 @@ public class ProjectMapper {
         entity.setEndpointUrl(dataClass.getEndpointUrl());
         return entity;
     }
+
+    public ProjectEntity createProjectDataToProjectEntity(CreateProjectData createProjectData) {
+        ProjectEntity entity = new ProjectEntity();
+        entity.setName(createProjectData.name());
+        entity.setDomain(createProjectData.domain());
+        return entity;
+    }
 }
