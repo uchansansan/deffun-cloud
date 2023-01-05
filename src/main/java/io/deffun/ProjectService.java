@@ -1,5 +1,8 @@
 package io.deffun;
 
+import io.deffun.deployment.DokkuService;
+import io.deffun.usermgmt.UserEntity;
+import io.deffun.usermgmt.UserRepository;
 import jakarta.inject.Singleton;
 
 import javax.transaction.Transactional;
@@ -16,10 +19,16 @@ public class ProjectService {
 
     private final UserRepository userRepository;
 
-    public ProjectService(ProjectMapper projectMapper, ProjectRepository projectRepository, UserRepository userRepository) {
+    private final DokkuService dokkuService;
+
+    public ProjectService(ProjectMapper projectMapper,
+                          ProjectRepository projectRepository,
+                          UserRepository userRepository,
+                          DokkuService dokkuService) {
         this.projectMapper = projectMapper;
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
+        this.dokkuService = dokkuService;
     }
 
     public List<ProjectData> projects() {
@@ -36,6 +45,9 @@ public class ProjectService {
         Path path = Paths.get("");
 //        path = new DeffunCli()
 //                .generateProject(); // generate project
+
+        dokkuService.createRemoteApp(data.name());
+        dokkuService.initLocalAndPush(path, data.name());
 
         UserEntity user = userRepository.findByUsername(data.username()).orElseThrow();
         ProjectEntity project = projectMapper.createProjectDataToProjectEntity(data);

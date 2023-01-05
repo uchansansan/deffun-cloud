@@ -1,4 +1,4 @@
-package io.deffun;
+package io.deffun.usermgmt;
 
 import io.micronaut.data.annotation.Repository;
 import io.micronaut.data.repository.CrudRepository;
@@ -11,6 +11,8 @@ public interface UserRepository extends CrudRepository<UserEntity, Long> {
 //    UserEntity findByUsername(String username);
 
     Optional<UserEntity> findByUsername(String username);
+
+    Optional<UserEntity> findByEmail(String email);
 
     Collection<UserEntity> findByIdIn(Collection<Long> ids);
 

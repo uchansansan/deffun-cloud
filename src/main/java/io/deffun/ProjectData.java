@@ -1,5 +1,7 @@
 package io.deffun;
 
+import io.deffun.usermgmt.UserData;
+
 public class ProjectData {
     private Long id;
 
@@ -11,7 +13,7 @@ public class ProjectData {
 
     private String endpointUrl;
 
-    private Object user;
+    private UserData user;
 
     public Long getId() {
         return id;
@@ -53,11 +55,11 @@ public class ProjectData {
         this.endpointUrl = endpointUrl;
     }
 
-    public Object getUser() {
+    public UserData getUser() {
         return user;
     }
 
-    public void setUser(Object user) {
+    public void setUser(UserData user) {
         this.user = user;
     }
 }

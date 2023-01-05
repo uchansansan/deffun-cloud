@@ -1,5 +1,7 @@
 package io.deffun;
 
+import io.deffun.usermgmt.UserEntity;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

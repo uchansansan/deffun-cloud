@@ -1,6 +1,36 @@
 micronaut:
   application:
     name: deffunCloud
+  router:
+    static-resources:
+      default:
+        enabled: true
+        mapping: "/**"
+        paths:
+          - "file:/Users/artem/projects/deffun/frontend/deffunction/dist"
+  server:
+    cors:
+      enabled: true
+  security:
+    authentication: idtoken
+    oauth2:
+      clients:
+        google:
+          client-id: '${GOOGLE_OAUTH_CLIENT_ID}'
+          client-secret: '${GOOGLE_OAUTH_CLIENT_SECRET}'
+          openid:
+            issuer: 'https://accounts.google.com'
+    redirect:
+      unauthorized:
+        url: "/login"
+    intercept-url-map:
+      - pattern: "/**"
+        httpMethod: GET
+        access:
+          - isAnonymous()
+    endpoints:
+      logout:
+        get-allowed: true
 #datasources:
 #  default:
 #    driverClassName: org.mariadb.jdbc.Driver
