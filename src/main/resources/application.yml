@@ -7,7 +7,7 @@ micronaut:
         enabled: true
         mapping: "/**"
         paths:
-          - "file:/Users/artem/projects/deffun/frontend/deffunction/dist"
+          - "classpath:public"
   server:
     cors:
       enabled: true
@@ -59,3 +59,5 @@ netty:
   default:
     allocator:
       max-order: 3
+#deffun-cloud:
+#  ssh:

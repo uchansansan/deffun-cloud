@@ -5,7 +5,6 @@ import io.deffun.usermgmt.UserService;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Get;
-import io.micronaut.http.annotation.PathVariable;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.authentication.Authentication;
@@ -19,11 +18,6 @@ public class UserController {
     @Inject
     private UserService userService;
 
-//    @Get("/{id}")
-//    public UserData get(@PathVariable Long id) {
-//        return userService.getById(id);
-//    }
-
     @Get("/settings")
     public UserData settings(Authentication authentication) {
         String email = (String) authentication.getAttributes().get("email");
@@ -33,10 +27,10 @@ public class UserController {
     @Post("/upload_ssh_key")
     public HttpResponse<Void> uploadSshKey(Authentication authentication, String sshPublicKey) {
         String email = (String) authentication.getAttributes().get("email");
-        if (email == null) {
-            // use AuthenticationExceptionHandler // or create your own
-            throw new AuthenticationException("no email");
-        }
+//        if (email == null) {
+//            // use AuthenticationExceptionHandler // or create your own
+//            throw new AuthenticationException("no email");
+//        }
         userService.uploadSshKey(email, sshPublicKey);
         return HttpResponse.ok();
     }
