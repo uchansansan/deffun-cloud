@@ -12,7 +12,7 @@ import javax.persistence.Id;
 public class UserEntity {
     @Id
     @GeneratedValue(
-            strategy = GenerationType.AUTO
+            strategy = GenerationType.IDENTITY
     )
     private Long id;
 

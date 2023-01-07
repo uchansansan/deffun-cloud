@@ -168,7 +168,7 @@
         <dependency>
             <groupId>com.github.mwiede</groupId>
             <artifactId>jsch</artifactId>
-            <version>0.2.5</version>
+            <version>0.2.6</version>
         </dependency>
 
         <!-- https://github.com/Atrox/haikunatorjava -->

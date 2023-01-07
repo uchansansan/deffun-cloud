@@ -31,3 +31,6 @@
 ## Feature test-resources documentation
 
 - [Micronaut Test Resources documentation](https://micronaut-projects.github.io/micronaut-test-resources/latest/guide/)
+
+---
+use `mn:docker` or `package -Dpackaging=docker`

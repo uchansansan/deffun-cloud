@@ -31,13 +31,12 @@ micronaut:
     endpoints:
       logout:
         get-allowed: true
-#datasources:
-#  default:
-#    driverClassName: org.mariadb.jdbc.Driver
-#    db-type: mariadb
-#    dialect: MYSQL
 datasources:
   default:
+    driverClassName: org.mariadb.jdbc.Driver
+    db-type: mariadb
+    dialect: MYSQL
+  h2:
     url: jdbc:h2:mem:devDb
     driverClassName: org.h2.Driver
     username: sa
@@ -51,7 +50,13 @@ jpa:
     properties:
       hibernate:
         hbm2ddl:
-          auto: create-drop
+          auto: none
+        show_sql: true
+        format_sql: true
+flyway:
+  datasources:
+    default:
+      enabled: true
 graphql:
   graphiql:
     enabled: true
