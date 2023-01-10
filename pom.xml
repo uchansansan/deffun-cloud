@@ -71,6 +71,12 @@
             <groupId>io.micronaut.graphql</groupId>
             <artifactId>micronaut-graphql</artifactId>
             <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.graphql-java</groupId>
+                    <artifactId>graphql-java</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.micronaut.sql</groupId>
@@ -169,6 +175,18 @@
             <groupId>com.github.mwiede</groupId>
             <artifactId>jsch</artifactId>
             <version>0.2.6</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.deffun</groupId>
+            <artifactId>janedokku</artifactId>
+            <version>0.0.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>1.33</version>
         </dependency>
 
         <!-- https://github.com/Atrox/haikunatorjava -->

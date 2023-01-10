@@ -28,6 +28,10 @@ micronaut:
         httpMethod: GET
         access:
           - isAnonymous()
+      - pattern: "/graphql"
+        httpMethod: POST
+        access:
+          - isAnonymous()
     endpoints:
       logout:
         get-allowed: true
@@ -64,5 +68,8 @@ netty:
   default:
     allocator:
       max-order: 3
-#deffun-cloud:
-#  ssh:
+deffun:
+  dokku:
+    host: '${DOKKU_HOST}'
+    keyFile: '${DOKKU_KEY_FILE}'
+    passphrase: '${DOKKU_KEY_FILE_PASSPHRASE}'
