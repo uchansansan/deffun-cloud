@@ -6,6 +6,10 @@ type Mutation {
     createProject(schema: String!, name: String!, domain: String, framework: Framework, database: Database): Project!
 }
 
+type Subscription {
+    createProject(schema: String!, name: String!, domain: String, framework: Framework, database: Database): Project!
+}
+
 type Project {
     id: ID!
     name: String!

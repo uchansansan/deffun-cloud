@@ -31,18 +31,19 @@ public class SshFactory {
         JSch.setLogger(new Slf4jLogger());
         JSch jSch = new JSch();
 
-        String configFile = "/root/.ssh/config";
-        if (Files.exists(Paths.get(configFile))) {
-            OpenSSHConfig openSSHConfig = OpenSSHConfig.parseFile(configFile);
-            jSch.setConfigRepository(openSSHConfig);
-        }
-
-        jSch.addIdentity(keyFile, passphrase);
-
-        String knownHostsFile = "/root/.ssh/known_hosts";
-        if (Files.exists(Paths.get(knownHostsFile))) {
-            jSch.setKnownHosts(knownHostsFile);
-        }
+        // todo /root -> System.getProperty and also how to add known host programmatically or via script?
+//        String configFile = System.getProperty("user.home") + "/.ssh/config";
+//        if (Files.exists(Paths.get(configFile))) {
+//            OpenSSHConfig openSSHConfig = OpenSSHConfig.parseFile(configFile);
+//            jSch.setConfigRepository(openSSHConfig);
+//        }
+//
+//        jSch.addIdentity(keyFile, passphrase);
+//
+//        String knownHostsFile = System.getProperty("user.home") + "/root/.ssh/known_hosts";
+//        if (Files.exists(Paths.get(knownHostsFile))) {
+//            jSch.setKnownHosts(knownHostsFile);
+//        }
 
         return jSch;
     }
