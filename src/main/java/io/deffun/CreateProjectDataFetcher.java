@@ -18,11 +18,11 @@ public class CreateProjectDataFetcher implements DataFetcher<ProjectData> {
     public ProjectData get(DataFetchingEnvironment environment) throws Exception {
         String schema = environment.getArgument("schema");
         String name = environment.getArgument("name");
-        String domain = environment.getArgument("domain");
+        String domain = environment.getArgument("basePackage");
         Framework framework = environment.getArgumentOrDefault("framework", Framework.MICRONAUT);
         Database database = environment.getArgumentOrDefault("database", Database.MARIADB);
         String username = environment.getArgument("user");
-        CreateProjectData data = new CreateProjectData(schema, name, domain, framework, database, username);
+        CreateProjectData data = new CreateProjectData(schema, domain, framework, database, username);
         return projectService.save(data);
     }
 }

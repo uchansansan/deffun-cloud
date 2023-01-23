@@ -21,7 +21,7 @@ public class GraphQLFactory {
     public GraphQL graphQL(ResourceResolver resourceResolver,
                            ProjectsDataFetcher projectsDataFetcher,
                            CreateProjectDataFetcher createProjectDataFetcher,
-                           SubCreateProjectDataFetcher subCreateProjectDataFetcher
+                           PubProjectDataFetcher pubProjectDataFetcher
     ) {
         SchemaParser schemaParser = new SchemaParser();
         SchemaGenerator schemaGenerator = new SchemaGenerator();
@@ -36,7 +36,7 @@ public class GraphQLFactory {
         RuntimeWiring runtimeWiring = RuntimeWiring.newRuntimeWiring()
                 .type("Query", typeWiring -> typeWiring.dataFetcher("projects", projectsDataFetcher))
                 .type("Mutation", typeWiring -> typeWiring.dataFetcher("createProject", createProjectDataFetcher))
-                .type("Subscription", typeWiring -> typeWiring.dataFetcher("createProject", subCreateProjectDataFetcher))
+                .type("Subscription", typeWiring -> typeWiring.dataFetcher("pubProject", pubProjectDataFetcher))
                 .build();
 
         GraphQLSchema graphQLSchema = schemaGenerator.makeExecutableSchema(typeRegistry, runtimeWiring);

@@ -1,6 +1,6 @@
 package io.deffun.usermgmt;
 
-import io.deffun.deployment.DokkuService;
+import io.deffun.doh.Dokku;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -13,7 +13,7 @@ public class UserService {
     private UserRepository userRepository;
 //    private TokenRepository tokenRepository;
     @Inject
-    private DokkuService dokkuService;
+    private Dokku dokku;
 
     public UserData save(UserData userData) {
         UserEntity userEntity = userMapper.userDataToUserEntity(userData);
@@ -43,7 +43,7 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("not found"));
         userEntity.setSshPublicKey(sshPublicKey);
         userRepository.update(userEntity);
-        dokkuService.addSshKey(String.valueOf(userEntity.getId()), sshPublicKey);
+        dokku.sshKeys().add(String.valueOf(userEntity.getId()), sshPublicKey);
     }
 
     public String getSshKey(String email) {

@@ -5,16 +5,14 @@ import io.deffun.gen.Framework;
 
 public final class CreateProjectData {
     private final String schema;
-    private final String name;
-    private final /*@Nullable*/ String domain;
+    private final /*@Nullable*/ String basePackage;
     private final /*@Nullable*/ Framework framework;
     private final /*@Nullable*/ Database database;
     private final String username;
 
-    public CreateProjectData(String schema, String name, String domain, Framework framework, Database database, String username) {
+    public CreateProjectData(String schema, String basePackage, Framework framework, Database database, String username) {
         this.schema = schema;
-        this.name = name;
-        this.domain = domain;
+        this.basePackage = basePackage;
         this.framework = framework;
         this.database = database;
         this.username = username;
@@ -24,12 +22,8 @@ public final class CreateProjectData {
         return schema;
     }
 
-    public String name() {
-        return name;
-    }
-
-    public String domain() {
-        return domain;
+    public String basePackage() {
+        return basePackage;
     }
 
     public Framework framework() {

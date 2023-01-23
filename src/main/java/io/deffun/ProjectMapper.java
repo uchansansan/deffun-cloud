@@ -7,7 +7,7 @@ public class ProjectMapper {
     public ProjectData projectEntityToProjectData(ProjectEntity entity) {
         ProjectData dataClass = new ProjectData();
         dataClass.setName(entity.getName());
-        dataClass.setDomain(entity.getDomain());
+        dataClass.setDomain(entity.getBasePackage());
         dataClass.setSourceCodeUrl(entity.getSourceCodeUrl());
         dataClass.setEndpointUrl(entity.getEndpointUrl());
         return dataClass;
@@ -16,7 +16,7 @@ public class ProjectMapper {
     public ProjectEntity projectDataToProjectEntity(ProjectData dataClass) {
         ProjectEntity entity = new ProjectEntity();
         entity.setName(dataClass.getName());
-        entity.setDomain(dataClass.getDomain());
+        entity.setBasePackage(dataClass.getDomain());
         entity.setSourceCodeUrl(dataClass.getSourceCodeUrl());
         entity.setEndpointUrl(dataClass.getEndpointUrl());
         return entity;
@@ -24,8 +24,7 @@ public class ProjectMapper {
 
     public ProjectEntity createProjectDataToProjectEntity(CreateProjectData createProjectData) {
         ProjectEntity entity = new ProjectEntity();
-        entity.setName(createProjectData.name());
-        entity.setDomain(createProjectData.domain());
+        entity.setBasePackage(createProjectData.basePackage());
         return entity;
     }
 }

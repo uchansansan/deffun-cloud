@@ -1,4 +1,5 @@
 micronaut:
+#  context-path: "/api"
   application:
     name: deffunCloud
   router:
@@ -9,9 +10,11 @@ micronaut:
         paths:
           - "classpath:public"
   server:
+#    context-path: "/api"
     cors:
       enabled: true
   security:
+    context-path: "/api"
     authentication: idtoken
     oauth2:
       clients:
@@ -20,6 +23,9 @@ micronaut:
           client-secret: '${GOOGLE_OAUTH_CLIENT_SECRET}'
           openid:
             issuer: 'https://accounts.google.com'
+      # oauth uri's are not relative to context-path so double '/api' there
+#      callback-uri: "/api/oauth/callback{/provider}"
+#      login-uri: "/api/oauth/login{/provider}"
     redirect:
       unauthorized:
         url: "/login"
@@ -57,12 +63,21 @@ jpa:
           auto: none
         show_sql: true
         format_sql: true
+#      javax:
+#        persistence:
+#          schema-generation:
+#            create-source: metadata
+#            scripts:
+#              action: create
+#              create-target: create.sql
 flyway:
   datasources:
     default:
       enabled: true
 graphql:
   graphiql:
+    enabled: true
+  graphql-ws:
     enabled: true
 netty:
   default:

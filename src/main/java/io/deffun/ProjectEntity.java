@@ -4,6 +4,7 @@ import io.deffun.usermgmt.UserEntity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -16,13 +17,14 @@ import javax.persistence.OneToOne;
 class ProjectEntity {
     @Id
     @GeneratedValue(
-            strategy = GenerationType.AUTO
+            strategy = GenerationType.IDENTITY
     )
     private Long id;
 
     @OneToOne
     @JoinColumn(
-            name = "user_id"
+            name = "user_id",
+            foreignKey = @ForeignKey(name="FK_USER")
     )
     private UserEntity user;
 
@@ -32,11 +34,12 @@ class ProjectEntity {
     )
     private String name;
 
+    // todo do we need to save it?
     @Column(
-            name = "domain",
+            name = "base_package",
             nullable = false
     )
-    private String domain;
+    private String basePackage;
 
     @Column(
             name = "sourceCodeUrl",
@@ -74,12 +77,12 @@ class ProjectEntity {
         this.name = name;
     }
 
-    public String getDomain() {
-        return domain;
+    public String getBasePackage() {
+        return basePackage;
     }
 
-    public void setDomain(String domain) {
-        this.domain = domain;
+    public void setBasePackage(String basePackage) {
+        this.basePackage = basePackage;
     }
 
     public String getSourceCodeUrl() {

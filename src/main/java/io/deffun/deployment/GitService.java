@@ -8,14 +8,18 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.URIish;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
 @Singleton
 public class GitService {
+    private static final Logger LOG = LoggerFactory.getLogger(GitService.class);
     private static final String DEFAULT_REMOTE_NAME = "dokku";
 
     @Inject
@@ -24,10 +28,10 @@ public class GitService {
     private String host;
 
     // TBD - use user's username, email, ssh keys and so on
-    public void initRepository(Path path, String projectName) {
+    public void initRepository(Path path, String appName) {
         URIish uri;
         try {
-            uri = new URIish("dokku@%s:%s".formatted(host, projectName));
+            uri = new URIish("dokku@%s:%s".formatted(host, appName));
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
@@ -57,6 +61,7 @@ public class GitService {
                     })
                     .setOutputStream(responseStream)
                     .call();
+            LOG.info(responseStream.toString(StandardCharsets.UTF_8));
         } catch (IOException e) { // cannot open repo
             throw new RuntimeException(e);
         } catch (GitAPIException e) {
