@@ -6,6 +6,7 @@ import jakarta.inject.Singleton;
 public class UserMapper {
     public UserData userEntityToUserData(UserEntity entity) {
         UserData dataClass = new UserData();
+        dataClass.setId(entity.getId());
         dataClass.setUsername(entity.getUsername());
         dataClass.setEmail(entity.getEmail());
         return dataClass;

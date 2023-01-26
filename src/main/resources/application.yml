@@ -1,5 +1,4 @@
 micronaut:
-#  context-path: "/api"
   application:
     name: deffunCloud
   router:
@@ -8,13 +7,11 @@ micronaut:
         enabled: true
         mapping: "/**"
         paths:
-          - "classpath:public"
+          - "file:${APP_DIST_DIR}"
   server:
-#    context-path: "/api"
     cors:
       enabled: true
   security:
-    context-path: "/api"
     authentication: idtoken
     oauth2:
       clients:
@@ -23,9 +20,6 @@ micronaut:
           client-secret: '${GOOGLE_OAUTH_CLIENT_SECRET}'
           openid:
             issuer: 'https://accounts.google.com'
-      # oauth uri's are not relative to context-path so double '/api' there
-#      callback-uri: "/api/oauth/callback{/provider}"
-#      login-uri: "/api/oauth/login{/provider}"
     redirect:
       unauthorized:
         url: "/login"
@@ -87,4 +81,4 @@ deffun:
   dokku:
     host: '${DOKKU_HOST}'
     keyFile: '${DOKKU_KEY_FILE}'
-    passphrase: '${DOKKU_KEY_FILE_PASSPHRASE}'
+    keyPassphrase: '${DOKKU_KEY_PASSPHRASE}'

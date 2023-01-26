@@ -7,11 +7,11 @@ public class ProjectData {
 
     private String name;
 
-    private String domain;
+    private String apiName;
 
-    private String sourceCodeUrl;
+    private String apiEndpointUrl;
 
-    private String endpointUrl;
+    private String schema;
 
     private UserData user;
 
@@ -31,28 +31,28 @@ public class ProjectData {
         this.name = name;
     }
 
-    public String getDomain() {
-        return domain;
+    public String getApiName() {
+        return apiName;
     }
 
-    public void setDomain(String domain) {
-        this.domain = domain;
+    public void setApiName(String apiName) {
+        this.apiName = apiName;
     }
 
-    public String getSourceCodeUrl() {
-        return sourceCodeUrl;
+    public String getApiEndpointUrl() {
+        return apiEndpointUrl;
     }
 
-    public void setSourceCodeUrl(String sourceCodeUrl) {
-        this.sourceCodeUrl = sourceCodeUrl;
+    public void setApiEndpointUrl(String apiEndpointUrl) {
+        this.apiEndpointUrl = apiEndpointUrl;
     }
 
-    public String getEndpointUrl() {
-        return endpointUrl;
+    public String getSchema() {
+        return schema;
     }
 
-    public void setEndpointUrl(String endpointUrl) {
-        this.endpointUrl = endpointUrl;
+    public void setSchema(String schema) {
+        this.schema = schema;
     }
 
     public UserData getUser() {

@@ -8,6 +8,8 @@ import io.deffun.gen.Database;
 import io.deffun.gen.Deffun;
 import io.deffun.usermgmt.UserEntity;
 import io.deffun.usermgmt.UserRepository;
+import io.micronaut.security.authentication.Authentication;
+import io.micronaut.security.utils.SecurityService;
 import jakarta.inject.Singleton;
 import me.atrox.haikunator.Haikunator;
 import org.reactivestreams.Publisher;
@@ -16,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 
 import javax.transaction.Transactional;
-import javax.validation.ConstraintViolationException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
@@ -30,6 +31,8 @@ import java.util.Map;
 public class ProjectService {
     private static final Logger LOG = LoggerFactory.getLogger(ProjectService.class);
 
+    private final SecurityService securityService;
+
     private final ProjectMapper projectMapper;
 
     private final ProjectRepository projectRepository;
@@ -42,11 +45,12 @@ public class ProjectService {
 
     private final GitService gitService;
 
-    public ProjectService(ProjectMapper projectMapper,
+    public ProjectService(SecurityService securityService, ProjectMapper projectMapper,
                           ProjectRepository projectRepository,
                           UserRepository userRepository,
                           Haikunator haikunator, Dokku dokku,
                           GitService gitService) {
+        this.securityService = securityService;
         this.projectMapper = projectMapper;
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
@@ -64,6 +68,16 @@ public class ProjectService {
         return objects;
     }
 
+    public List<ProjectData> userProjects() {
+        UserEntity userEntity = currentUser();
+        Iterable<ProjectEntity> entities = projectRepository.findAllByUserId(userEntity.getId());
+        List<ProjectData> objects = new ArrayList<>();
+        for (ProjectEntity entity : entities) {
+            objects.add(projectMapper.projectEntityToProjectData(entity));
+        }
+        return objects;
+    }
+
     public ProjectData project(Long id) {
         ProjectEntity entity = projectRepository.findById(id).orElseThrow();
         return projectMapper.projectEntityToProjectData(entity);
@@ -74,110 +88,105 @@ public class ProjectService {
     }
 
     @Transactional
-    public ProjectData save(CreateProjectData data) {
-        ///// begin code customization
-        String appName = haikunator.haikunate();
-
-        LOG.info("app name {}", appName);
-
-        ///// begin code customization
-        Path projects = Paths.get(System.getProperty("user.home"), "projects");
-        Deffun.Parameters parameters = Deffun.parameters()
-                .appName(appName)
-                .basePackage("app.deffun")
-                .schemaContent(data.schema())
-                .output(projects)
-                .get();
-        Path path = Deffun.generateProject(parameters);
-        dokku.apps().create(appName);
-        try {
-            dokku.buildpacks().add(appName, new URL("https://github.com/heroku/heroku-buildpack-java.git"));
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
-        Database database = data.database();
-        DatabasePlugin databasePlugin = switch (database) {
-            case MYSQL -> dokku.mySqlPlugin();
-            case MARIADB -> dokku.mariaDbPlugin();
-            case POSTGRES -> dokku.postgresPlugin();
-        };
-        String dbName = appName + "_db";
-        databasePlugin.create(dbName);
-        databasePlugin.link(dbName, appName);
-        LOG.info(">>> linked app {} and db {}", appName, dbName);
-        String databaseUrl = dokku.config().get(appName, "DATABASE_URL");
-        LOG.info(">>> database URL {}", databaseUrl);
-        URI jdbcUrl = Util.convertDbUrlToJdbcUrl(URI.create(databaseUrl));
-        LOG.info(">>> JDBC URL {}", jdbcUrl);
-        dokku.config().set(appName,
-                Map.of(
-                        "DATASOURCES_DEFAULT_URL", jdbcUrl.toString()
-                ));
-        gitService.initRepository(path, appName);
-        gitService.pushRepository(path);
-
-        ///// end code customization
-
-//        return projectMapper.projectEntityToProjectData(saved);
-        ProjectData projectData = new ProjectData();
-        projectData.setName(appName);
-        return projectData;
+    public ProjectData createProject(CreateProjectData createProjectData) {
+        UserEntity userEntity = currentUser();
+        ProjectEntity projectEntity = projectMapper.createProjectDataToProjectEntity(createProjectData, userEntity);
+        ProjectEntity saved = projectRepository.save(projectEntity);
+        return projectMapper.projectEntityToProjectData(saved);
     }
 
-    //    private val publishSubject = PublishSubject.create<Planet>()
-
-    //    @Transactional
-    public Publisher<ProjectData> pubSave(CreateProjectData data) {
-        String appName = haikunator.haikunate();
-
-        LOG.info("app name {}", appName);
-
+    @Transactional
+    public ProjectData createApi(CreateApiData data) {
+        LOG.info("create api data {}", data);
         ///// begin code customization
+        String appName;
+        if (data.getName() != null) {
+            appName = data.getName();
+        } else {
+            appName = haikunator.haikunate();
+        }
+        ProjectEntity projectEntity = projectRepository.findById(data.getProjectId()).orElseThrow();
+        projectEntity.setApiName(appName);
+        projectEntity.setSchema(data.getSchema());
         Path projects = Paths.get(System.getProperty("user.home"), "projects");
         Deffun.Parameters parameters = Deffun.parameters()
                 .appName(appName)
                 .basePackage("app.deffun")
-                .schemaContent(data.schema())
+                .schemaContent(data.getSchema())
+                .database(data.getDatabase())
                 .output(projects)
                 .get();
         Path path = Deffun.generateProject(parameters);
-        dokku.apps().create(appName);
-        try {
-            dokku.buildpacks().add(appName, new URL("https://github.com/heroku/heroku-buildpack-java.git"));
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
-        Database database = data.database();
-        DatabasePlugin databasePlugin = switch (database) {
-            case MYSQL -> dokku.mySqlPlugin();
-            case MARIADB -> dokku.mariaDbPlugin();
-            case POSTGRES -> dokku.postgresPlugin();
-        };
-        String dbName = appName + "_db";
-        databasePlugin.create(dbName);
-        databasePlugin.link(dbName, appName);
-        LOG.info(">>> linked app {} and db {}", appName, dbName);
-        String databaseUrl = dokku.config().get(appName, "DATABASE_URL");
-        LOG.info(">>> database URL {}", databaseUrl);
-        URI jdbcUrl = Util.convertDbUrlToJdbcUrl(URI.create(databaseUrl));
-        LOG.info(">>> JDBC URL {}", jdbcUrl);
-        dokku.config().set(appName,
-                Map.of(
-                        "DATASOURCES_DEFAULT_URL", jdbcUrl.toString()
-                ));
+        LOG.info("app name {} and path {}", appName, path);
+        ///// end code customization
+
+        ProjectEntity saved = projectRepository.save(projectEntity);
+        return projectMapper.projectEntityToProjectData(saved);
+    }
+
+    @Transactional
+    public Publisher<ProjectData> deployApiAsync(DeployApiData data) {
+        ///// begin code customization
+        ProjectEntity projectEntity = projectRepository.findById(data.getProjectId()).orElseThrow();
+        String appName = projectEntity.getApiName();
+        Database database = projectEntity.getDatabase();
+        setupDokkuApp(appName, database);
+        Path projectsPath = Paths.get(System.getProperty("user.home"), "projects");
+        Path path = projectsPath.resolve(appName);
         gitService.initRepository(path, appName);
         return Flux.create(emitter -> {
             gitService.pushRepository(path);
+            projectEntity.setApiEndpointUrl("%s.deffun.app".formatted(appName));
             ///// end code customization
 
-//            UserEntity user = userRepository.findByUsername(data.username()).orElseThrow();
-//            ProjectEntity project = projectMapper.createProjectDataToProjectEntity(data);
-//            project.setUser(user);
-//            ProjectEntity saved = projectRepository.save(project);
-//
-//            ProjectData projectData = projectMapper.projectEntityToProjectData(saved);
+            ProjectEntity saved = projectRepository.save(projectEntity);
+            ProjectData projectData = projectMapper.projectEntityToProjectData(saved);
             emitter.complete();
         });
+    }
+
+    @Transactional
+    public ProjectData deployApi(DeployApiData data) {
+        ///// begin code customization
+        ProjectEntity projectEntity = projectRepository.findById(data.getProjectId()).orElseThrow();
+        String appName = projectEntity.getApiName();
+        Database database = projectEntity.getDatabase();
+        setupDokkuApp(appName, database);
+        Path projectsPath = Paths.get(System.getProperty("user.home"), "projects");
+        Path path = projectsPath.resolve(appName);
+        gitService.initRepository(path, appName);
+        gitService.pushRepository(path);
+        projectEntity.setApiEndpointUrl("%s.deffun.app".formatted(appName));
+        ///// end code customization
+
+        ProjectEntity saved = projectRepository.save(projectEntity);
+        return projectMapper.projectEntityToProjectData(saved);
+    }
+
+    private void setupDokkuApp(String appName, Database database) {
+        dokku.apps().create(appName);
+        try {
+            dokku.buildpacks().add(appName, new URL("https://github.com/heroku/heroku-buildpack-java.git"));
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+        DatabasePlugin databasePlugin = switch (database) {
+            case MYSQL -> dokku.mySqlPlugin();
+            case MARIADB -> dokku.mariaDbPlugin();
+            case POSTGRES -> dokku.postgresPlugin();
+        };
+        String dbName = appName + "_db";
+        databasePlugin.create(dbName);
+        databasePlugin.link(dbName, appName);
+        LOG.info(">>> linked app {} and db {}", appName, dbName);
+        String databaseUrl = dokku.config().get(appName, "DATABASE_URL");
+        LOG.info(">>> database URL {}", databaseUrl);
+        URI jdbcUrl = Util.convertDbUrlToJdbcUrl(URI.create(databaseUrl));
+        LOG.info(">>> JDBC URL {}", jdbcUrl);
+        dokku.config().set(appName,
+                Map.of(
+                        "DATASOURCES_DEFAULT_URL", jdbcUrl.toString()
+                ));
     }
 
     private void createRemoteApp(String projectName, Database database) {
@@ -191,4 +200,16 @@ public class ProjectService {
         databasePlugin.create(dbName);
         databasePlugin.link(dbName, projectName);
     }
+
+    //region SECURITY
+    private UserEntity currentUser() {
+        String email = currentUserEmail();
+        return userRepository.findByEmail(email).orElseThrow(); // or else 401 Unauthorized
+    }
+
+    private String currentUserEmail() {
+        Authentication authentication = securityService.getAuthentication().orElseThrow();
+        return (String) authentication.getAttributes().get("email");
+    }
+    //endregion
 }

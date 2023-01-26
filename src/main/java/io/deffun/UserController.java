@@ -8,7 +8,6 @@ import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.authentication.Authentication;
-import io.micronaut.security.authentication.AuthenticationException;
 import io.micronaut.security.rules.SecurityRule;
 import jakarta.inject.Inject;
 
@@ -18,8 +17,8 @@ public class UserController {
     @Inject
     private UserService userService;
 
-    @Get("/settings")
-    public UserData settings(Authentication authentication) {
+    @Get("/profile")
+    public UserData profile(Authentication authentication) {
         String email = (String) authentication.getAttributes().get("email");
         return userService.getByEmail(email);
     }

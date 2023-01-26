@@ -2,13 +2,13 @@ type Query {
     projects: [Project!]!
 }
 
-# todo rename project -> app?
 type Mutation {
-    createProject(schema: String!, name: String, basePackage: String, framework: Framework, database: Database): Project!
+    createApi(projectId: ID!, schema: String!, name: String, basePackage: String, framework: Framework, database: Database): Project!
+    deployApi(projectId: ID!): Project!
 }
 
 type Subscription {
-    pubProject(schema: String!, name: String, basePackage: String, framework: Framework, database: Database): Project!
+    deployApiAsync(projectId: ID!): Project!
 }
 
 type Project {
@@ -16,7 +16,7 @@ type Project {
     name: String!
     basePackage: String!
     sourceCodeUrl: String!
-    endpointUrl: String!
+    apiEndpointUrl: String!
     user: User!
 }
 

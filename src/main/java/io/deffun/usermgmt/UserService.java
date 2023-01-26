@@ -12,8 +12,8 @@ public class UserService {
     @Inject
     private UserRepository userRepository;
 //    private TokenRepository tokenRepository;
-    @Inject
-    private Dokku dokku;
+//    @Inject
+//    private Dokku dokku;
 
     public UserData save(UserData userData) {
         UserEntity userEntity = userMapper.userDataToUserEntity(userData);
@@ -43,7 +43,7 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("not found"));
         userEntity.setSshPublicKey(sshPublicKey);
         userRepository.update(userEntity);
-        dokku.sshKeys().add(String.valueOf(userEntity.getId()), sshPublicKey);
+//        dokku.sshKeys().add(String.valueOf(userEntity.getId()), sshPublicKey);
     }
 
     public String getSshKey(String email) {

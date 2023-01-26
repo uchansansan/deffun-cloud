@@ -20,8 +20,9 @@ public class GraphQLFactory {
     @Singleton
     public GraphQL graphQL(ResourceResolver resourceResolver,
                            ProjectsDataFetcher projectsDataFetcher,
-                           CreateProjectDataFetcher createProjectDataFetcher,
-                           PubProjectDataFetcher pubProjectDataFetcher
+                           CreateApiDataFetcher createApiDataFetcher,
+                           DeployApiDataFetcher deployApiDataFetcher,
+                           DeployApiAsyncDataFetcher deployApiAsyncDataFetcher
     ) {
         SchemaParser schemaParser = new SchemaParser();
         SchemaGenerator schemaGenerator = new SchemaGenerator();
@@ -35,8 +36,9 @@ public class GraphQLFactory {
 
         RuntimeWiring runtimeWiring = RuntimeWiring.newRuntimeWiring()
                 .type("Query", typeWiring -> typeWiring.dataFetcher("projects", projectsDataFetcher))
-                .type("Mutation", typeWiring -> typeWiring.dataFetcher("createProject", createProjectDataFetcher))
-                .type("Subscription", typeWiring -> typeWiring.dataFetcher("pubProject", pubProjectDataFetcher))
+                .type("Mutation", typeWiring -> typeWiring.dataFetcher("createApi", createApiDataFetcher))
+                .type("Mutation", typeWiring -> typeWiring.dataFetcher("deployApi", deployApiDataFetcher))
+                .type("Subscription", typeWiring -> typeWiring.dataFetcher("deployApiAsync", deployApiAsyncDataFetcher))
                 .build();
 
         GraphQLSchema graphQLSchema = schemaGenerator.makeExecutableSchema(typeRegistry, runtimeWiring);

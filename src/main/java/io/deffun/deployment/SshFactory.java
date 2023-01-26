@@ -26,20 +26,20 @@ import java.nio.file.Paths;
 
 @Factory
 public class SshFactory {
+    private static final Logger LOG = LoggerFactory.getLogger(SshFactory.class);
+
     @Singleton
     public JSch jSch(
             @Value("${deffun.dokku.keyFile}") String keyFile,
-            @Value("${deffun.dokku.passphrase}") String passphrase
+            @Value("${deffun.dokku.keyPassphrase}") String passphrase
     ) throws JSchException, IOException {
         JSch.setLogger(new Slf4jLogger());
         JSch jSch = new JSch();
 
-        // todo /root -> System.getProperty and also how to add known host programmatically or via script?
         String configFile = System.getProperty("user.home") + "/.ssh/config";
-        Logger logger = LoggerFactory.getLogger(getClass());
-        logger.info(configFile);
+        LOG.info(configFile);
         if (Files.exists(Paths.get(configFile))) {
-            logger.info(configFile + " exists");
+            LOG.info(configFile + " exists");
             OpenSSHConfig openSSHConfig = OpenSSHConfig.parseFile(configFile);
             jSch.setConfigRepository(openSSHConfig);
         }
@@ -47,9 +47,9 @@ public class SshFactory {
         jSch.addIdentity(keyFile, passphrase);
 
         String knownHostsFile = System.getProperty("user.home") + "/.ssh/known_hosts";
-        logger.info(knownHostsFile);
+        LOG.info(knownHostsFile);
         if (Files.exists(Paths.get(knownHostsFile))) {
-            logger.info(knownHostsFile + " exists");
+            LOG.info(knownHostsFile + " exists");
             jSch.setKnownHosts(knownHostsFile);
         }
 

@@ -1,9 +1,12 @@
 package io.deffun;
 
+import io.deffun.gen.Database;
 import io.deffun.usermgmt.UserEntity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -14,7 +17,7 @@ import javax.persistence.OneToOne;
 @Entity(
         name = "projects"
 )
-class ProjectEntity {
+public class ProjectEntity {
     @Id
     @GeneratedValue(
             strategy = GenerationType.IDENTITY
@@ -34,24 +37,23 @@ class ProjectEntity {
     )
     private String name;
 
-    // todo do we need to save it?
     @Column(
-            name = "base_package",
-            nullable = false
+            name = "api_name"
     )
-    private String basePackage;
+    private String apiName;
 
     @Column(
-            name = "sourceCodeUrl",
-            nullable = false
+            name = "db_name"
     )
-    private String sourceCodeUrl;
+    @Enumerated(EnumType.STRING)
+    private Database database;
 
     @Column(
-            name = "endpointUrl",
-            nullable = false
+            name = "api_endpoint_url"
     )
-    private String endpointUrl;
+    private String apiEndpointUrl;
+    @Column(name = "schema_content")
+    private String schema;
 
     public Long getId() {
         return id;
@@ -77,27 +79,35 @@ class ProjectEntity {
         this.name = name;
     }
 
-    public String getBasePackage() {
-        return basePackage;
+    public String getApiName() {
+        return apiName;
     }
 
-    public void setBasePackage(String basePackage) {
-        this.basePackage = basePackage;
+    public void setApiName(String apiName) {
+        this.apiName = apiName;
     }
 
-    public String getSourceCodeUrl() {
-        return sourceCodeUrl;
+    public Database getDatabase() {
+        return database;
     }
 
-    public void setSourceCodeUrl(String sourceCodeUrl) {
-        this.sourceCodeUrl = sourceCodeUrl;
+    public void setDatabase(Database database) {
+        this.database = database;
     }
 
-    public String getEndpointUrl() {
-        return endpointUrl;
+    public String getApiEndpointUrl() {
+        return apiEndpointUrl;
     }
 
-    public void setEndpointUrl(String endpointUrl) {
-        this.endpointUrl = endpointUrl;
+    public void setApiEndpointUrl(String apiEndpointUrl) {
+        this.apiEndpointUrl = apiEndpointUrl;
+    }
+
+    public String getSchema() {
+        return schema;
+    }
+
+    public void setSchema(String schema) {
+        this.schema = schema;
     }
 }

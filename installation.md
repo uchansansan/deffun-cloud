@@ -4,7 +4,7 @@
   - install docker
   - run `docker run --name mariadbtest -e MYSQL_ROOT_PASSWORD=mypass -p 3306:3306 -d docker.io/library/mariadb:latest`
   - create database. run `docker exec -it mariadbtest mariadb --user root -pmypass` then `create database deffun;`
-- export next env vars: GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET, DATASOURCES_DEFAULT_URL, DATASOURCES_DEFAULT_USERNAME, DATASOURCES_DEFAULT_PASSWORD, DOKKU_KEY_FILE, DOKKU_KEY_FILE_PASSPHRASE, DOKKU_HOST
+- export next env vars: GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET, DATASOURCES_DEFAULT_URL, DATASOURCES_DEFAULT_USERNAME, DATASOURCES_DEFAULT_PASSWORD, DOKKU_KEY_FILE, DOKKU_KEY_PASSPHRASE, DOKKU_HOST and APP_DIST_DIR to deploy with frontend
 - run `java -jar my.jar`
 
 ## frontend

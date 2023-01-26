@@ -32,7 +32,6 @@ public class UserEntity {
     @Column(
             name = "email",
             nullable = false
-//            unique = true
     )
     private String email;
 
