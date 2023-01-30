@@ -125,6 +125,17 @@ public class ProjectService {
     }
 
     @Transactional
+    public ProjectData update(CreateApiData data) {
+        ProjectEntity projectEntity = projectRepository.findById(data.getProjectId()).orElseThrow();
+        projectEntity.setSchema(data.getSchema());
+        ProjectEntity saved = projectRepository.save(projectEntity);
+        LOG.info(">>> schema {}", saved.getSchema());
+        ProjectData projectData = projectMapper.projectEntityToProjectData(saved);
+        LOG.info(">>> and schema {}", projectData.getSchema());
+        return projectData;
+    }
+
+    @Transactional
     public Publisher<ProjectData> deployApiAsync(DeployApiData data) {
         ///// begin code customization
         ProjectEntity projectEntity = projectRepository.findById(data.getProjectId()).orElseThrow();
@@ -145,6 +156,7 @@ public class ProjectService {
         });
     }
 
+    @Deprecated // ???
     @Transactional
     public ProjectData deployApi(DeployApiData data) {
         ///// begin code customization
@@ -158,6 +170,46 @@ public class ProjectService {
         gitService.pushRepository(path);
         projectEntity.setApiEndpointUrl("%s.deffun.app".formatted(appName));
         ///// end code customization
+
+        ProjectEntity saved = projectRepository.save(projectEntity);
+        return projectMapper.projectEntityToProjectData(saved);
+    }
+
+    @Transactional
+    public ProjectData generateAndDeploy(CreateApiData data) {
+        ProjectEntity projectEntity = projectRepository.findById(data.getProjectId()).orElseThrow();
+        if (projectEntity.getApiName() == null) {
+            String appName = data.getName() != null ? data.getName() : haikunator.haikunate();
+            projectEntity.setApiName(appName);
+        }
+        String appName = projectEntity.getApiName();
+//        projectEntity.setSchema(data.getSchema());
+        if (projectEntity.getDatabase() == null) {
+            Database database = data.getDatabase() != null ? data.getDatabase() : Database.MARIADB;
+            projectEntity.setDatabase(database);
+        }
+
+        Path projects = Paths.get(System.getProperty("user.home"), "projects");
+
+        if (projectEntity.getApiEndpointUrl() != null) {
+            // todo delete generated code and dokku app
+        }
+
+        Deffun.Parameters parameters = Deffun.parameters()
+                .appName(appName)
+                .basePackage("app.deffun")
+                .schemaContent(projectEntity.getSchema())
+                .database(projectEntity.getDatabase())
+                .output(projects)
+                .get();
+        Path path = Deffun.generateProject(parameters);
+        LOG.info("app name {} and path {}", appName, path);
+
+        Database database = projectEntity.getDatabase();
+        setupDokkuApp(appName, database);
+        gitService.initRepository(path, appName);
+        gitService.pushRepository(path);
+        projectEntity.setApiEndpointUrl("%s.deffun.app".formatted(appName));
 
         ProjectEntity saved = projectRepository.save(projectEntity);
         return projectMapper.projectEntityToProjectData(saved);

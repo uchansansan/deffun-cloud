@@ -41,6 +41,17 @@ public class ProjectController {
         createApiData.setProjectId(id);
         return projectService.createApi(createApiData);
     }
+    @Post("{id}/save_schema")
+    public ProjectData saveSchema(CreateApiData createApiData, @PathVariable("id") Long id) {
+        createApiData.setProjectId(id);
+        return projectService.update(createApiData);
+    }
+
+    @Post("{id}/gen_deploy_api")
+    public ProjectData genDeployApi(CreateApiData createApiData, @PathVariable("id") Long id) {
+        createApiData.setProjectId(id);
+        return projectService.generateAndDeploy(createApiData);
+    }
 
     @Post("{id}/deploy_api")
     public ProjectData deploy(@PathVariable("id") Long id) {
