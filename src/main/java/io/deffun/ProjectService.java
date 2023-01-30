@@ -21,6 +21,7 @@ import javax.transaction.Transactional;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -193,6 +194,7 @@ public class ProjectService {
 
         if (projectEntity.getApiEndpointUrl() != null) {
             // todo delete generated code and dokku app
+            //Files.deleteIfExists(projects.resolve(projectEntity.getApiName()));
         }
 
         Deffun.Parameters parameters = Deffun.parameters()
@@ -209,7 +211,7 @@ public class ProjectService {
         setupDokkuApp(appName, database);
         gitService.initRepository(path, appName);
         gitService.pushRepository(path);
-        projectEntity.setApiEndpointUrl("%s.deffun.app".formatted(appName));
+        projectEntity.setApiEndpointUrl("https://%s.deffun.app".formatted(appName));
 
         ProjectEntity saved = projectRepository.save(projectEntity);
         return projectMapper.projectEntityToProjectData(saved);
@@ -239,6 +241,8 @@ public class ProjectService {
                 Map.of(
                         "DATASOURCES_DEFAULT_URL", jdbcUrl.toString()
                 ));
+        dokku.letsEncryptPlugin().setEmail(appName, currentUserEmail());
+        dokku.letsEncryptPlugin().enable(appName);
     }
 
     private void createRemoteApp(String projectName, Database database) {

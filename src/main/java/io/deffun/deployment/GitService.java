@@ -28,6 +28,8 @@ public class GitService {
     private String host;
 
     // TBD - use user's username, email, ssh keys and so on
+    //git config user.email "you@example.com"
+    //git config user.name "your name"
     public void initRepository(Path path, String appName) {
         URIish uri;
         try {
