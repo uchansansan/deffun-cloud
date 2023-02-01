@@ -13,6 +13,8 @@ public class ProjectData {
 
     private String schema;
 
+    private boolean deploying;
+
     private UserData user;
 
     public Long getId() {
@@ -53,6 +55,14 @@ public class ProjectData {
 
     public void setSchema(String schema) {
         this.schema = schema;
+    }
+
+    public boolean isDeploying() {
+        return deploying;
+    }
+
+    public void setDeploying(boolean deploying) {
+        this.deploying = deploying;
     }
 
     public UserData getUser() {

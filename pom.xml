@@ -127,6 +127,13 @@
             <version>0.0.1</version>
         </dependency>
 
+        <!-- utils -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.11.0</version>
+        </dependency>
+
         <!-- Git ops -->
         <!--<dependency>
             <groupId></groupId>
@@ -274,7 +281,7 @@
                 </configuration>
             </plugin>
 
-            <!--<plugin>
+            <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>
                 <version>1.12.1</version>
@@ -301,18 +308,18 @@
                         </goals>
                     </execution>
                     <execution>
-                        <id>yarn generate</id>
+                        <id>yarn quasar build</id>
                         <goals>
                             <goal>yarn</goal>
                         </goals>
                         <configuration>
-                            <arguments>generate</arguments>
+                            <arguments>quasar build</arguments>
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>-->
+            </plugin>
             <!-- or copy resources plugin -->
-            <!--<plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>3.1.0</version>
@@ -322,7 +329,7 @@
                         <configuration>
                             <target>
                                 <copy todir="${project.build.directory}/classes/public">
-                                    <fileset dir="${project.basedir}/deffun-app/dist"/>
+                                    <fileset dir="${project.basedir}/deffun-app/dist/spa"/>
                                 </copy>
                             </target>
                         </configuration>
@@ -331,7 +338,7 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>-->
+            </plugin>
         </plugins>
     </build>
 

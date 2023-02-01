@@ -52,8 +52,12 @@ public class ProjectEntity {
             name = "api_endpoint_url"
     )
     private String apiEndpointUrl;
+
     @Column(name = "schema_content")
     private String schema;
+
+    @Column(name = "deploying")
+    private boolean deploying;
 
     public Long getId() {
         return id;
@@ -109,5 +113,13 @@ public class ProjectEntity {
 
     public void setSchema(String schema) {
         this.schema = schema;
+    }
+
+    public boolean isDeploying() {
+        return deploying;
+    }
+
+    public void setDeploying(boolean deploying) {
+        this.deploying = deploying;
     }
 }

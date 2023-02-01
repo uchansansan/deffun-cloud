@@ -15,7 +15,8 @@
         <append>true</append>
         <immediateFlush>true</immediateFlush>
         <encoder>
-            <pattern>%d %p %c{1.} [%t] %m%n</pattern>
+<!--            <pattern>%d %p %c{1.} [%t] %m%n</pattern>-->
+            <pattern>%cyan(%d{HH:mm:ss.SSS}) %gray([%thread]) %highlight(%-5level) %magenta(%logger{36}) - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -26,9 +27,11 @@
 
     <logger name="com.jcraft.jsch" level="debug" additivity="false">
         <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FILE"/>
     </logger>
 
     <root level="info">
         <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE"/>
     </root>
 </configuration>

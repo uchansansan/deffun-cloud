@@ -11,6 +11,7 @@ import io.deffun.doh.JSchCommandExecutor;
 import io.deffun.doh.SshUrl;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.context.annotation.Value;
+import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import me.atrox.haikunator.Haikunator;
 import org.eclipse.jgit.transport.SshSessionFactory;
@@ -23,6 +24,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Factory
 public class SshFactory {
@@ -82,4 +85,10 @@ public class SshFactory {
     public Haikunator haikunator() {
         return new Haikunator().setDelimiter("");
     }
+
+//    @Named("deploymentExecutor")
+//    @Singleton
+//    public ExecutorService deploymentExecutor() {
+//        return Executors.newFixedThreadPool(10);
+//    }
 }
