@@ -1,66 +1,74 @@
 <template>
-  <q-page class="row items-center justify-evenly">
-    <div v-if="currentUser">
+  <q-page class="row full-width justify-evenly">
+    <div v-if="currentUser" class="full-width">
       <div v-if="selectedProject">
         <q-expansion-item
           expand-separator
-          popup
           default-opened
           icon="code"
           :label="selectedProject.name + ' Schema'"
           caption="GraphQL Editor"
-          style="width: 850px"
+          class="full-width"
         >
           <MonacoEditor
-            theme="vs"
+            theme="vs-dark"
             :options="opts"
             language="graphql"
-            :width="800"
             :height="400"
-            v-model:value="schema"
+            @change="editorChange"
+            v-model:value="selectedProject.schema"
           />
         </q-expansion-item>
         <div class="row justify-between">
-            <q-btn
-              color="primary"
-              label="Save schema"
-              @click="saveSchema(schema)"
-              no-caps
-            />
+          <q-btn
+            color="primary"
+            label="Save schema"
+            @click="saveSchema(newSchema)"
+            no-caps
+          />
           <div v-if="selectedProject.schema">
             <q-btn
               color="primary"
               label="Deploy API"
-              @click="genDeployApi"
+              @click="genDeployApi(newSchema)"
+              :icon-right="mdiPlayOutline"
+              :disable="selectedProject.deploying"
+              :loading="selectedProject.deploying"
               no-caps
-            />
+            >
+              <template v-slot:loading>
+                Deploying
+                <q-spinner-ios
+                  color="secondary"
+                />
+              </template>
+            </q-btn>
           </div>
-        </div>
-        <div v-if="deploying">
-          Deployment in progress
-          <q-spinner
-            color="primary"
-            size="3em"
-          />
         </div>
         <div v-if="selectedProject.apiEndpointUrl">
           <q-card>
             <q-card-section>
               <div class="text">
-                You can test your GraphQL API by visiting
-                <a :href="selectedProject.apiEndpointUrl + '/graphiql'"
-                  target="_blank">{{ selectedProject.apiEndpointUrl }}/graphiql</a
-                >
+                Test your GraphQL API with Graph<em>i</em>QL
+                <a class="text-white" :href="selectedProject.apiEndpointUrl + '/graphiql'" target="_blank">
+                  {{ selectedProject.apiEndpointUrl }}/graphiql
+                </a>
+              </div>
+              <div class="text">
+                GraphQL API itself is available here
+                <a class="text-white" :href="selectedProject.apiEndpointUrl + '/graphql'" target="_blank">
+                  {{ selectedProject.apiEndpointUrl }}/graphql
+                </a>
               </div>
             </q-card-section>
           </q-card>
         </div>
       </div>
-      <div v-else>
+      <div v-else class="items-center">
         <CreateProjectCard />
       </div>
     </div>
-    <div v-else>
+    <div v-else class="items-center">
       <q-card>
         <q-card-section>
           <div class="text-h6">Sign in</div>
@@ -87,10 +95,11 @@ import { ref, onMounted } from 'vue';
 import { useUserStore } from 'stores/user-store';
 import { useProjectStore } from 'stores/project-store';
 import { storeToRefs } from 'pinia';
-import { mdiGoogle } from '@quasar/extras/mdi-v6';
+import { mdiGoogle, mdiPlayOutline } from '@quasar/extras/mdi-v6';
 import MonacoEditor from 'monaco-editor-vue3';
 import CreateProjectCard from 'components/CreateProjectCard.vue';
-import quasar from 'quasar';
+import {editor} from 'monaco-editor';
+import IStandaloneCodeEditor = editor.IStandaloneCodeEditor;
 
 const userStore = useUserStore();
 const { currentUser } = storeToRefs(userStore);
@@ -98,7 +107,7 @@ const { fetchUser } = userStore;
 
 const projectStore = useProjectStore();
 const { selectedProject } = storeToRefs(projectStore);
-const { fetchProjects, saveSchema, genDeployApi } = projectStore;
+const { fetchProjects, refetchSelectedProject, saveSchema, genDeployApi } = projectStore;
 
 const defaultSchema = `type MyType {
   id: ID!
@@ -110,14 +119,20 @@ type Query {
 }
 `;
 // TODO load data from selectedProject if exist
-const schema = ref(defaultSchema);
+const newSchema = ref(defaultSchema);
 const opts = ref({
-  value: defaultSchema,
   language: 'graphql',
   formatOnPaste: true,
 });
 
-const deploying = ref(false);
+//function editorDid(editor: IStandaloneCodeEditor) {
+//  editor.updateOptions();
+//}
+
+function editorChange(value, event) {
+  console.log("... " + value);
+  newSchema.value = value;
+}
 
 onMounted(async () => {
   await fetchUser();
@@ -125,14 +140,18 @@ onMounted(async () => {
     await fetchProjects();
     if (selectedProject.value) {
       if (selectedProject.value.schema) {
-        schema.value = selectedProject.value.schema;
-        opts.value = {
-          value: selectedProject.value.schema,
-          language: 'graphql',
-          formatOnPaste: true,
-        };
+        newSchema.value = selectedProject.value.schema;
+//        opts.value = {
+//          value: selectedProject.value.schema,
+//          language: 'graphql',
+//          formatOnPaste: true,
+//        };
       }
-      deploying.value = selectedProject.value.deploying;
+//      deploying.value = selectedProject.value.deploying;
+      const pollInterval = setInterval(async () => {
+        await refetchSelectedProject();
+      }, 30000);
+      //      setTimeout(() => { clearInterval(pollInterval) }, 36000000);
     }
   }
 });

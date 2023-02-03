@@ -40,6 +40,12 @@ public class UserEntity {
     )
     private String sshPublicKey;
 
+    @Column(
+            name = "nb_of_projects",
+            nullable = false
+    )
+    private int numberOfProjects;
+
     public Long getId() {
         return id;
     }
@@ -70,5 +76,13 @@ public class UserEntity {
 
     public void setSshPublicKey(String sshPublicKey) {
         this.sshPublicKey = sshPublicKey;
+    }
+
+    public int getNumberOfProjects() {
+        return numberOfProjects;
+    }
+
+    public void setNumberOfProjects(int numberOfProjects) {
+        this.numberOfProjects = numberOfProjects;
     }
 }

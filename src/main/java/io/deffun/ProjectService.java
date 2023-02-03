@@ -136,7 +136,7 @@ public class ProjectService {
     public ProjectData update(CreateApiData data) {
         ProjectEntity projectEntity = projectRepository.findById(data.getProjectId()).orElseThrow();
         projectEntity.setSchema(data.getSchema());
-        ProjectEntity saved = projectRepository.save(projectEntity);
+        ProjectEntity saved = projectRepository.update(projectEntity);
         LOG.info(">>> schema {}", saved.getSchema());
         ProjectData projectData = projectMapper.projectEntityToProjectData(saved);
         LOG.info(">>> and schema {}", projectData.getSchema());
@@ -191,31 +191,40 @@ public class ProjectService {
 
         String appName = projectEntity.getApiName() != null ? projectEntity.getApiName() : haikunator.haikunate();
         Database database = projectEntity.getDatabase() != null ? projectEntity.getDatabase() : Database.MARIADB;
-        projectRepository.update(data.getProjectId(), true, appName, database);
+        int newVer = projectEntity.getVersion() + 1;
+        projectRepository.update(data.getProjectId(), true, appName, database, newVer);
 
         deploymentExecutor.submit(() -> {
-            Path projects = Paths.get(System.getProperty("user.home"), "projects");
-            if (projectEntity.getApiEndpointUrl() != null) {
-                deleteDokkuApp(appName, data.getDatabase());
-                try {
-                    FileUtils.deleteDirectory(projects.resolve(appName).toFile());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+            try {
+                Path projects = Paths.get(System.getProperty("user.home"), "projects");
+                if (projectEntity.getApiEndpointUrl() != null) {
+                    LOG.info(">>> delete app");
+                    deleteDokkuApp(appName, database);
+                    LOG.info(">>> app deleted");
+                    try {
+                        FileUtils.deleteDirectory(projects.resolve(appName).toFile());
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
-            }
-            Deffun.Parameters parameters = Deffun.parameters()
-                    .appName(appName)
-                    .basePackage("app.deffun")
-                    .schemaContent(projectEntity.getSchema())
-                    .database(database)
-                    .output(projects)
-                    .get();
-            Path path = Deffun.generateProject(parameters);
-            LOG.info("app name {} and path {}", appName, path);
+                Deffun.Parameters parameters = Deffun.parameters()
+                        .appName(appName)
+                        .basePackage("app.deffun")
+                        .schemaContent(projectEntity.getSchema())
+                        .database(database)
+                        .output(projects)
+                        .get();
+                Path path = Deffun.generateProject(parameters);
+                LOG.info("app name {} and path {}", appName, path);
 
-            setupDokkuApp(appName, database);
-            gitService.initRepository(path, appName);
-            projectRepository.update(data.getProjectId(), false, "https://%s.deffun.app".formatted(appName));
+                setupDokkuApp(appName, database);
+                gitService.initRepository(path, appName);
+                gitService.pushRepository(path);
+                projectRepository.update(data.getProjectId(), false, "https://%s.deffun.app".formatted(appName));
+            } catch (Exception e) {
+                LOG.info("some problem occurred", e);
+                projectRepository.update(data.getProjectId(), false, null);
+            }
         });
 
         ProjectEntity fetched = projectRepository.findById(projectEntity.getId()).orElseThrow();
@@ -247,9 +256,10 @@ public class ProjectService {
     }
 
     private void deleteDokkuApp(String appName, Database database) {
-        dokku.apps().destroy(appName);
+        dokku.apps().destroyForce(appName);
         DatabasePlugin databasePlugin = getDatabasePlugin(database);
-        databasePlugin.destroy(appName + "_db");
+        LOG.info("delete using {}", databasePlugin);
+        databasePlugin.destroyForce(appName + "_db");
     }
 
     private DatabasePlugin getDatabasePlugin(Database database) {
@@ -258,18 +268,6 @@ public class ProjectService {
             case MARIADB -> dokku.mariaDbPlugin();
             case POSTGRES -> dokku.postgresPlugin();
         };
-    }
-
-    private void createRemoteApp(String projectName, Database database) {
-        dokku.apps().create(projectName);
-        DatabasePlugin databasePlugin = switch (database) {
-            case MARIADB -> dokku.mariaDbPlugin();
-            case MYSQL -> dokku.mySqlPlugin();
-            case POSTGRES -> dokku.postgresPlugin();
-        };
-        String dbName = projectName + "-db";
-        databasePlugin.create(dbName);
-        databasePlugin.link(dbName, projectName);
     }
 
     //region SECURITY

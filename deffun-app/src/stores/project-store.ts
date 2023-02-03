@@ -26,6 +26,16 @@ export const useProjectStore = defineStore('project', {
         this.selectedProject = this.projects[this.projects.length - 1];
       }
     },
+    async refetchSelectedProject() {
+      if (!this.selectedProject) {
+        return;
+      }
+      this.selectedProject = await api
+        .get<ProjectData>('/projects/' + this.selectedProject.id)
+        .then((response) => {
+          return response.data;
+        });
+    },
     async createProject(projectName: string) {
       const data: CreateProjectData = {
         name: projectName,
@@ -82,11 +92,13 @@ export const useProjectStore = defineStore('project', {
           return null;
         });
     },
-    async genDeployApi() {
+    async genDeployApi(schema: string) {
       if (!this.selectedProject) {
         return;
       }
-      const data: CreateApiData = {};
+      const data: CreateApiData = {
+        schema: schema
+      };
       this.selectedProject = await api
         .post<ProjectData>(
           '/projects/' + this.selectedProject.id + '/gen_deploy_api',

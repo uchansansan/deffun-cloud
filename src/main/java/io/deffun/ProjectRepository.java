@@ -12,7 +12,7 @@ public interface ProjectRepository extends CrudRepository<ProjectEntity, Long> {
     Iterable<ProjectEntity> findAllByUserId(Long userId);
 
     @Transactional
-    void update(@Id Long id, boolean deploying, String apiName, Database database);
+    void update(@Id Long id, boolean deploying, String apiName, Database database, int version);
 
     @Transactional
     void update(@Id Long id, boolean deploying, String apiEndpointUrl);

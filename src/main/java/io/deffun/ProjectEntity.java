@@ -59,6 +59,9 @@ public class ProjectEntity {
     @Column(name = "deploying")
     private boolean deploying;
 
+    @Column(name = "ver", nullable = false)
+    private int version;
+
     public Long getId() {
         return id;
     }
@@ -121,5 +124,13 @@ public class ProjectEntity {
 
     public void setDeploying(boolean deploying) {
         this.deploying = deploying;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
+    }
+
+    public int getVersion() {
+        return version;
     }
 }

@@ -24,7 +24,7 @@
     <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
       <q-list>
         <div v-if="currentUser">
-          <q-expansion-item expand-separator popup label="Projects">
+          <q-expansion-item expand-separator label="Projects">
             <ProjectLink
               v-for="project in projects"
               :key="project.name"
