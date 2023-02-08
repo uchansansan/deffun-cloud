@@ -9,6 +9,7 @@ public class UserMapper {
         dataClass.setId(entity.getId());
         dataClass.setUsername(entity.getUsername());
         dataClass.setEmail(entity.getEmail());
+        dataClass.setBalance(entity.getBalance());
         return dataClass;
     }
 

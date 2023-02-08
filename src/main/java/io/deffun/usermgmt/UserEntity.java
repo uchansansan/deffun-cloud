@@ -7,6 +7,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import java.math.BigDecimal;
 
 @Entity(
         name = "users"
@@ -40,11 +41,8 @@ public class UserEntity {
     )
     private String sshPublicKey;
 
-    @Column(
-            name = "nb_of_projects",
-            nullable = false
-    )
-    private int numberOfProjects;
+    @Column(name = "balance")
+    private BigDecimal balance;
 
     public Long getId() {
         return id;
@@ -78,11 +76,11 @@ public class UserEntity {
         this.sshPublicKey = sshPublicKey;
     }
 
-    public int getNumberOfProjects() {
-        return numberOfProjects;
+    public BigDecimal getBalance() {
+        return balance;
     }
 
-    public void setNumberOfProjects(int numberOfProjects) {
-        this.numberOfProjects = numberOfProjects;
+    public void setBalance(BigDecimal balance) {
+        this.balance = balance;
     }
 }

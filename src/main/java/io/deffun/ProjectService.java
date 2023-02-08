@@ -1,5 +1,6 @@
 package io.deffun;
 
+import io.deffun.billing.BillingService;
 import io.deffun.deployment.GitService;
 import io.deffun.doh.DatabasePlugin;
 import io.deffun.doh.Dokku;
@@ -8,12 +9,17 @@ import io.deffun.gen.Database;
 import io.deffun.gen.Deffun;
 import io.deffun.usermgmt.UserEntity;
 import io.deffun.usermgmt.UserRepository;
+import io.micronaut.context.event.StartupEvent;
+import io.micronaut.runtime.event.annotation.EventListener;
+import io.micronaut.scheduling.TaskExecutors;
+import io.micronaut.scheduling.TaskScheduler;
 import io.micronaut.security.authentication.Authentication;
 import io.micronaut.security.utils.SecurityService;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import me.atrox.haikunator.Haikunator;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.Validate;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,11 +27,15 @@ import reactor.core.publisher.Flux;
 
 import javax.transaction.Transactional;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,29 +44,44 @@ import java.util.concurrent.ExecutorService;
 @Singleton
 public class ProjectService {
     private static final Logger LOG = LoggerFactory.getLogger(ProjectService.class);
+    private static final String DEFAULT_SCHEMA = """
+            type MyType {
+              id: ID!
+              name: String
+            }
+            type Query {
+              list: [MyType]
+              getById(id: ID!): MyType
+            }
+            type Mutation {
+              create(name: String): MyType
+            }
+            """;
+
+    // todo ofHours
+    private static final Duration DELAY = Duration.ofMinutes(1);
 
     private final SecurityService securityService;
-
     private final ProjectMapper projectMapper;
-
     private final ProjectRepository projectRepository;
-
     private final UserRepository userRepository;
-
     private final Haikunator haikunator;
-
     private final Dokku dokku;
-
     private final GitService gitService;
-
+    // to run deployment in separate thread
     private final ExecutorService deploymentExecutor;
+
+    // balance mgmt
+    private final TaskScheduler taskScheduler;
+    private final BillingService billingService;
 
     public ProjectService(SecurityService securityService, ProjectMapper projectMapper,
                           ProjectRepository projectRepository,
                           UserRepository userRepository,
                           Haikunator haikunator, Dokku dokku,
                           GitService gitService,
-                          @Named("deployment") ExecutorService deploymentExecutor) {
+                          @Named("deployment") ExecutorService deploymentExecutor,
+                          @Named(TaskExecutors.SCHEDULED) TaskScheduler taskScheduler, BillingService billingService) {
         this.securityService = securityService;
         this.projectMapper = projectMapper;
         this.projectRepository = projectRepository;
@@ -65,6 +90,8 @@ public class ProjectService {
         this.dokku = dokku;
         this.gitService = gitService;
         this.deploymentExecutor = deploymentExecutor;
+        this.taskScheduler = taskScheduler;
+        this.billingService = billingService;
     }
 
     public List<ProjectData> projects() {
@@ -78,7 +105,7 @@ public class ProjectService {
 
     public List<ProjectData> userProjects() {
         UserEntity userEntity = currentUser();
-        Iterable<ProjectEntity> entities = projectRepository.findAllByUserId(userEntity.getId());
+        List<ProjectEntity> entities = projectRepository.findAllByUserId(userEntity.getId());
         List<ProjectData> objects = new ArrayList<>();
         for (ProjectEntity entity : entities) {
             objects.add(projectMapper.projectEntityToProjectData(entity));
@@ -91,16 +118,66 @@ public class ProjectService {
         return projectMapper.projectEntityToProjectData(entity);
     }
 
-    public void delete(Long id) {
+    @Transactional
+    public void deleteProject(Long id) {
+        // todo in one request please, kinda `findByIdAndUsersEmail`
+        UserEntity userEntity = currentUser();
+        ProjectEntity projectEntity = projectRepository.findById(id)
+                .orElseThrow();
+        if (projectEntity.isTest()) {
+            deleteDokkuApp(projectEntity.getApiName(), projectEntity.getDatabase());
+            projectEntity.setApiEndpointUrl(null);
+            projectRepository.update(projectEntity);
+            return;
+        }
+        Validate.isTrue(userEntity.getId().equals(projectEntity.getUser().getId())); // todo del this line
+        deleteDokkuApp(projectEntity.getApiName(), projectEntity.getDatabase());
         projectRepository.deleteById(id);
     }
 
     @Transactional
+    public void undeployApi(Long id) {
+        // todo in one request please, kinda `findByIdAndUsersEmail`
+        UserEntity userEntity = currentUser();
+        ProjectEntity projectEntity = projectRepository.findById(id)
+                .orElseThrow();
+        Validate.isTrue(userEntity.getId().equals(projectEntity.getUser().getId()));
+        deleteDokkuApp(projectEntity.getApiName(), projectEntity.getDatabase());
+        projectEntity.setApiEndpointUrl(null);
+        projectEntity.setLastCharge(null);
+        projectEntity.setDeploying(false);
+        projectRepository.update(projectEntity);
+    }
+
+    // TODO: v1_2 & v1_3 migrations not needed
+
+    @Transactional
     public ProjectData createProject(CreateProjectData createProjectData) {
         UserEntity userEntity = currentUser();
+        if (userEntity.getBalance().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new NotEnoughBalanceException("Please, top up your balance.");
+        }
         ProjectEntity projectEntity = projectMapper.createProjectDataToProjectEntity(createProjectData, userEntity);
         ProjectEntity saved = projectRepository.save(projectEntity);
         return projectMapper.projectEntityToProjectData(saved);
+    }
+
+    @EventListener
+    public void onStartup(StartupEvent startupEvent) {
+        LOG.info("I'm working in startup");
+        Iterable<ProjectEntity> all = projectRepository.findAll();
+        for (ProjectEntity projectEntity : all) {
+            if (!projectEntity.isTest() && projectEntity.getApiEndpointUrl() != null) {
+                // we should recalculate balance if node was offline for some time
+                Duration between = Duration.between(LocalDateTime.now(), projectEntity.getLastCharge());
+                long hours = between.get(ChronoUnit.HOURS);
+                if (hours > 0) {
+                    billingService.chargeForHours(projectEntity.getId(), hours);
+                }
+                Duration duration = between.minusHours(hours);
+                taskScheduler.scheduleWithFixedDelay(duration, DELAY, () -> billingService.updateBalance(projectEntity.getId()));
+            }
+        }
     }
 
     @Transactional
@@ -116,16 +193,16 @@ public class ProjectService {
         ProjectEntity projectEntity = projectRepository.findById(data.getProjectId()).orElseThrow();
         projectEntity.setApiName(appName);
         projectEntity.setSchema(data.getSchema());
-        Path projects = Paths.get(System.getProperty("user.home"), "projects");
-        Deffun.Parameters parameters = Deffun.parameters()
-                .appName(appName)
-                .basePackage("app.deffun")
-                .schemaContent(data.getSchema())
-                .database(data.getDatabase())
-                .output(projects)
-                .get();
-        Path path = Deffun.generateProject(parameters);
-        LOG.info("app name {} and path {}", appName, path);
+//        Path projects = Paths.get(System.getProperty("user.home"), "projects");
+//        Deffun.Parameters parameters = Deffun.parameters()
+//                .appName(appName)
+//                .basePackage("app.deffun")
+//                .schemaContent(data.getSchema())
+//                .database(data.getDatabase())
+//                .output(projects)
+//                .get();
+//        Path path = Deffun.generateProject(parameters);
+//        LOG.info("app name {} and path {}", appName, path);
         ///// end code customization
 
         ProjectEntity saved = projectRepository.save(projectEntity);
@@ -191,8 +268,8 @@ public class ProjectService {
 
         String appName = projectEntity.getApiName() != null ? projectEntity.getApiName() : haikunator.haikunate();
         Database database = projectEntity.getDatabase() != null ? projectEntity.getDatabase() : Database.MARIADB;
-        int newVer = projectEntity.getVersion() + 1;
-        projectRepository.update(data.getProjectId(), true, appName, database, newVer);
+//        int newVer = projectEntity.getVersion() + 1;
+        projectRepository.update(data.getProjectId(), true, appName, database);
 
         deploymentExecutor.submit(() -> {
             try {
@@ -206,6 +283,7 @@ public class ProjectService {
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
+                    projectRepository.update(data.getProjectId(), null);
                 }
                 Deffun.Parameters parameters = Deffun.parameters()
                         .appName(appName)
@@ -220,15 +298,34 @@ public class ProjectService {
                 setupDokkuApp(appName, database);
                 gitService.initRepository(path, appName);
                 gitService.pushRepository(path);
-                projectRepository.update(data.getProjectId(), false, "https://%s.deffun.app".formatted(appName));
+                projectRepository.update(data.getProjectId(), false, "https://%s.deffun.app".formatted(appName), LocalDateTime.now());
+
+                // task can be canceled, but we should save the reference of the returned `ScheduledFuture<?>` for this
+                taskScheduler.schedule(DELAY, () -> billingService.updateBalance(projectEntity.getId()));
             } catch (Exception e) {
                 LOG.info("some problem occurred", e);
-                projectRepository.update(data.getProjectId(), false, null);
+                projectRepository.update(data.getProjectId(), false, null, (LocalDateTime) null);
             }
         });
 
         ProjectEntity fetched = projectRepository.findById(projectEntity.getId()).orElseThrow();
         return projectMapper.projectEntityToProjectData(fetched);
+    }
+
+    @Transactional
+    public void createTestProjectIfAbsent(Long userId) {
+        UserEntity userEntity = userRepository.findById(userId).orElseThrow();
+        List<ProjectEntity> list = projectRepository.findAllByUserId(userId);
+        LOG.info("create if absent {}", list.size());
+        if (list.stream().noneMatch(ProjectEntity::isTest)) {
+            LOG.info("none tests found");
+            ProjectEntity entity = new ProjectEntity();
+            entity.setTest(true);
+            entity.setName("Test");
+            entity.setSchema(DEFAULT_SCHEMA);
+            entity.setUser(userEntity);
+            projectRepository.save(entity);
+        }
     }
 
     private void setupDokkuApp(String appName, Database database) {

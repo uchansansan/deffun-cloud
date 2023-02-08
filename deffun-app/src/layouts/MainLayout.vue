@@ -15,6 +15,7 @@
         <div>v0.0.1-beta-test-for-friends</div>
 
         <div v-if="currentUser">
+          {{ currentUser.balance }}
           <q-separator vertical />
           <q-btn flat no-caps href="/logout" label="Sign out" />
         </div>
@@ -99,9 +100,9 @@ const expanded = ref(false);
 const essentialLinks: EssentialLinkProps[] = [
   {
     title: 'Docs',
-    caption: 'work in progress',
+    caption: 'docs.deffun.io',
     icon: 'school',
-    link: 'mailto:artem@deffun.io',
+    link: 'https://docs.deffun.io/',
   },
   {
     title: 'Github',
@@ -114,12 +115,6 @@ const essentialLinks: EssentialLinkProps[] = [
     caption: '@deffunproject',
     icon: 'rss_feed',
     link: 'https://twitter.com/deffunproject',
-  },
-  {
-    title: 'Telegram Channel',
-    caption: 't.me/deffunproject',
-    icon: 'chat',
-    link: 'https://t.me/deffunproject',
   },
 ];
 

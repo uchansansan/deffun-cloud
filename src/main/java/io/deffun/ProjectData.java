@@ -15,6 +15,8 @@ public class ProjectData {
 
     private boolean deploying;
 
+    private boolean test;
+
     private UserData user;
 
     public Long getId() {
@@ -63,6 +65,14 @@ public class ProjectData {
 
     public void setDeploying(boolean deploying) {
         this.deploying = deploying;
+    }
+
+    public boolean isTest() {
+        return test;
+    }
+
+    public void setTest(boolean test) {
+        this.test = test;
     }
 
     public UserData getUser() {

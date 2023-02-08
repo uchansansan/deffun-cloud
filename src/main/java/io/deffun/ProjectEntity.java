@@ -13,6 +13,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
+import java.time.LocalDateTime;
 
 @Entity(
         name = "projects"
@@ -59,8 +60,12 @@ public class ProjectEntity {
     @Column(name = "deploying")
     private boolean deploying;
 
-    @Column(name = "ver", nullable = false)
-    private int version;
+    // NOTE: good example of the property you don't need in API
+    @Column(name = "test", nullable = false)
+    private boolean test;
+
+    @Column(name = "last_charge")
+    private LocalDateTime lastCharge;
 
     public Long getId() {
         return id;
@@ -126,11 +131,19 @@ public class ProjectEntity {
         this.deploying = deploying;
     }
 
-    public void setVersion(int version) {
-        this.version = version;
+    public boolean isTest() {
+        return test;
     }
 
-    public int getVersion() {
-        return version;
+    public void setTest(boolean test) {
+        this.test = test;
+    }
+
+    public LocalDateTime getLastCharge() {
+        return lastCharge;
+    }
+
+    public void setLastCharge(LocalDateTime lastCharge) {
+        this.lastCharge = lastCharge;
     }
 }

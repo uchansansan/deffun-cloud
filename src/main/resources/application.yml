@@ -44,13 +44,6 @@ datasources:
     driverClassName: org.mariadb.jdbc.Driver
     db-type: mariadb
     dialect: MYSQL
-  h2:
-    url: jdbc:h2:mem:devDb
-    driverClassName: org.h2.Driver
-    username: sa
-    password: ''
-    schema-generate: CREATE_DROP
-    dialect: H2
 jpa:
   default:
     entity-scan:
@@ -82,6 +75,7 @@ netty:
     allocator:
       max-order: 3
 deffun:
+  hourrate: '1.5'
   dokku:
     host: '${DOKKU_HOST}'
     keyFile: '${DOKKU_KEY_FILE}'

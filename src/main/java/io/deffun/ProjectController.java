@@ -1,13 +1,16 @@
 package io.deffun;
 
+import io.micronaut.http.HttpResponse;
+import io.micronaut.http.HttpStatus;
 import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.Delete;
+import io.micronaut.http.annotation.Error;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.PathVariable;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.rules.SecurityRule;
 import jakarta.inject.Inject;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -37,11 +40,17 @@ public class ProjectController {
         return projectService.createProject(createProjectData);
     }
 
+    @Error(exception = NotEnoughBalanceException.class)
+    public HttpResponse<String> onCreateFailed(/*HttpRequest request,*/ NotEnoughBalanceException ex) {
+        return HttpResponse.status(HttpStatus.PAYMENT_REQUIRED, ex.getMessage());
+    }
+
     @Post("{id}/create_api")
     public ProjectData createApi(CreateApiData createApiData, @PathVariable("id") Long id) {
         createApiData.setProjectId(id);
         return projectService.createApi(createApiData);
     }
+
     @Post("{id}/save_schema")
     public ProjectData saveSchema(CreateApiData createApiData, @PathVariable("id") Long id) {
         createApiData.setProjectId(id);
@@ -61,5 +70,10 @@ public class ProjectController {
         DeployApiData data = new DeployApiData(); // move to method params if other then id is needed
         data.setProjectId(id);
         return projectService.deployApi(data);
+    }
+
+    @Delete("{id}")
+    public void delete(@PathVariable("id") Long id) {
+        projectService.deleteProject(id);
     }
 }

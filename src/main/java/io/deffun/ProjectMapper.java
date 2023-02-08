@@ -13,6 +13,7 @@ public class ProjectMapper {
         dataClass.setApiName(entity.getApiName());
         dataClass.setApiEndpointUrl(entity.getApiEndpointUrl());
         dataClass.setDeploying(entity.isDeploying());
+        dataClass.setTest(entity.isTest());
         return dataClass;
     }
 

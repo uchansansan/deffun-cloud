@@ -1,5 +1,6 @@
 package io.deffun.usermgmt;
 
+import io.deffun.ProjectService;
 import io.micronaut.context.event.ApplicationEventListener;
 import io.micronaut.security.authentication.Authentication;
 import io.micronaut.security.event.LoginSuccessfulEvent;
@@ -10,6 +11,8 @@ import jakarta.inject.Singleton;
 public class OnLoginSuccessEventListener implements ApplicationEventListener<LoginSuccessfulEvent> {
     @Inject
     private UserService userService;
+    @Inject
+    private ProjectService projectService;
 
     @Override
     public void onApplicationEvent(LoginSuccessfulEvent event) {
@@ -22,6 +25,7 @@ public class OnLoginSuccessEventListener implements ApplicationEventListener<Log
         UserData userData = new UserData();
         userData.setUsername((String) authentication.getAttributes().get("name"));
         userData.setEmail((String) authentication.getAttributes().get("email"));
-        userService.saveIfAbsent(userData);
+        UserData currentUser = userService.saveIfAbsent(userData);
+        projectService.createTestProjectIfAbsent(currentUser.getId());
     }
 }
