@@ -21,23 +21,12 @@ public class BillingService {
     private ProjectRepository projectRepository;
     @Inject
     private UserRepository userRepository;
-    @Value("${deffun.hourrate}")
+    @Value("${deffun.billing.defaultRubRate}")
     private String hourRate;
 
     @Transactional
     public void updateBalance(Long id) {
-        projectRepository.findById(id)
-                .ifPresentOrElse(project -> {
-                    if (project.getApiEndpointUrl() != null) {
-                        LOG.info("Hourly balance update for project '{}' (ID {})", project.getName(), project.getId());
-                        UserEntity user = project.getUser();
-                        BigDecimal subtrahend = new BigDecimal(hourRate);
-                        user.setBalance(user.getBalance().subtract(subtrahend));
-                        userRepository.update(user);
-                        project.setLastCharge(LocalDateTime.now());
-                        projectRepository.update(project);
-                    }
-                }, () -> LOG.info("Project with ID {} probably was deleted", id));
+        chargeForHours(id, 1L);
     }
 
     @Transactional
@@ -51,6 +40,8 @@ public class BillingService {
                         BigDecimal multiply = subtrahend.multiply(new BigDecimal(hours));
                         user.setBalance(user.getBalance().subtract(multiply));
                         userRepository.update(user);
+                        project.setLastCharge(LocalDateTime.now());
+                        projectRepository.update(project);
                     }
                 }, () -> LOG.info("Project with ID {} probably was deleted", id));
     }

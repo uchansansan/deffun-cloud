@@ -9,6 +9,7 @@ import io.deffun.gen.Database;
 import io.deffun.gen.Deffun;
 import io.deffun.usermgmt.UserEntity;
 import io.deffun.usermgmt.UserRepository;
+import io.micronaut.context.annotation.Value;
 import io.micronaut.context.event.StartupEvent;
 import io.micronaut.runtime.event.annotation.EventListener;
 import io.micronaut.scheduling.TaskExecutors;
@@ -35,7 +36,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -58,9 +58,6 @@ public class ProjectService {
             }
             """;
 
-    // todo ofHours
-    private static final Duration DELAY = Duration.ofMinutes(1);
-
     private final SecurityService securityService;
     private final ProjectMapper projectMapper;
     private final ProjectRepository projectRepository;
@@ -74,6 +71,7 @@ public class ProjectService {
     // balance mgmt
     private final TaskScheduler taskScheduler;
     private final BillingService billingService;
+    private final Long chargeDelay;
 
     public ProjectService(SecurityService securityService, ProjectMapper projectMapper,
                           ProjectRepository projectRepository,
@@ -81,7 +79,9 @@ public class ProjectService {
                           Haikunator haikunator, Dokku dokku,
                           GitService gitService,
                           @Named("deployment") ExecutorService deploymentExecutor,
-                          @Named(TaskExecutors.SCHEDULED) TaskScheduler taskScheduler, BillingService billingService) {
+                          @Named(TaskExecutors.SCHEDULED) TaskScheduler taskScheduler,
+                          BillingService billingService,
+                          @Value("${deffun.billing.chargeDelay}") Long chargeDelay) {
         this.securityService = securityService;
         this.projectMapper = projectMapper;
         this.projectRepository = projectRepository;
@@ -92,6 +92,7 @@ public class ProjectService {
         this.deploymentExecutor = deploymentExecutor;
         this.taskScheduler = taskScheduler;
         this.billingService = billingService;
+        this.chargeDelay = chargeDelay;
     }
 
     public List<ProjectData> projects() {
@@ -166,16 +167,18 @@ public class ProjectService {
     public void onStartup(StartupEvent startupEvent) {
         LOG.info("I'm working in startup");
         Iterable<ProjectEntity> all = projectRepository.findAll();
-        for (ProjectEntity projectEntity : all) {
-            if (!projectEntity.isTest() && projectEntity.getApiEndpointUrl() != null) {
+        for (ProjectEntity project : all) {
+            if (!project.isTest() && project.getApiEndpointUrl() != null) {
                 // we should recalculate balance if node was offline for some time
-                Duration between = Duration.between(LocalDateTime.now(), projectEntity.getLastCharge());
-                long hours = between.get(ChronoUnit.HOURS);
+                Duration between = Duration.between(project.getLastCharge(), LocalDateTime.now());
+                long hours = between.toHours();
+                Duration duration = Duration.ofHours(1L).minusMinutes(between.toMinutesPart());
+                LOG.info("Redeploy after {} hours and will be charged after {} mins -- project '{}' (ID {})", hours, duration.toMinutes(), project.getName(), project.getId());
+//                long hours = between.get(ChronoUnit.MINUTES);
                 if (hours > 0) {
-                    billingService.chargeForHours(projectEntity.getId(), hours);
+                    billingService.chargeForHours(project.getId(), hours);
                 }
-                Duration duration = between.minusHours(hours);
-                taskScheduler.scheduleWithFixedDelay(duration, DELAY, () -> billingService.updateBalance(projectEntity.getId()));
+                taskScheduler.scheduleWithFixedDelay(duration, getDelay(), () -> billingService.updateBalance(project.getId()));
             }
         }
     }
@@ -301,7 +304,7 @@ public class ProjectService {
                 projectRepository.update(data.getProjectId(), false, "https://%s.deffun.app".formatted(appName), LocalDateTime.now());
 
                 // task can be canceled, but we should save the reference of the returned `ScheduledFuture<?>` for this
-                taskScheduler.schedule(DELAY, () -> billingService.updateBalance(projectEntity.getId()));
+                taskScheduler.scheduleAtFixedRate(getDelay(), getDelay(), () -> billingService.updateBalance(projectEntity.getId()));
             } catch (Exception e) {
                 LOG.info("some problem occurred", e);
                 projectRepository.update(data.getProjectId(), false, null, (LocalDateTime) null);
@@ -365,6 +368,10 @@ public class ProjectService {
             case MARIADB -> dokku.mariaDbPlugin();
             case POSTGRES -> dokku.postgresPlugin();
         };
+    }
+
+    private Duration getDelay() {
+        return Duration.ofMinutes(chargeDelay);
     }
 
     //region SECURITY

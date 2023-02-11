@@ -5,6 +5,7 @@ export interface ProjectData {
   apiEndpointUrl?: string;
   schema?: string;
   deploying: boolean;
+  test: boolean;
 }
 
 export interface CreateProjectData {

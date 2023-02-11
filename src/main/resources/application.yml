@@ -52,8 +52,8 @@ jpa:
       hibernate:
         hbm2ddl:
           auto: none
-        show_sql: true
-        format_sql: true
+#        show_sql: true
+#        format_sql: true
 #      javax:
 #        persistence:
 #          schema-generation:
@@ -75,7 +75,9 @@ netty:
     allocator:
       max-order: 3
 deffun:
-  hourrate: '1.5'
+  billing:
+    defaultRubRate: '1.5'
+    chargeDelay: 60
   dokku:
     host: '${DOKKU_HOST}'
     keyFile: '${DOKKU_KEY_FILE}'

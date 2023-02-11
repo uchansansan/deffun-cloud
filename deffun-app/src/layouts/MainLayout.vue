@@ -12,13 +12,12 @@
         />
 
         <q-toolbar-title> deffun </q-toolbar-title>
-        <div>v0.0.1-beta-test-for-friends</div>
+        <div style="margin: 0 10px;">v0.0.2-pre-alpha-test</div>
 
-        <div v-if="currentUser">
-          {{ currentUser.balance }}
-          <q-separator vertical />
-          <q-btn flat no-caps href="/logout" label="Sign out" />
-        </div>
+        <q-separator v-if="currentUser" vertical />
+        <div v-if="currentUser" style="margin: 0 10px;">{{ currentUser.balance }} &#8381;</div>
+        <q-separator v-if="currentUser" vertical />
+        <q-btn v-if="currentUser" flat no-caps href="/logout" label="Sign out" />
       </q-toolbar>
     </q-header>
 

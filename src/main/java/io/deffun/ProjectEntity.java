@@ -61,8 +61,8 @@ public class ProjectEntity {
     private boolean deploying;
 
     // NOTE: good example of the property you don't need in API
-    @Column(name = "test", nullable = false)
-    private boolean test;
+    @Column(name = "is_test", nullable = false)
+    private boolean isTest;
 
     @Column(name = "last_charge")
     private LocalDateTime lastCharge;
@@ -132,11 +132,11 @@ public class ProjectEntity {
     }
 
     public boolean isTest() {
-        return test;
+        return isTest;
     }
 
     public void setTest(boolean test) {
-        this.test = test;
+        this.isTest = test;
     }
 
     public LocalDateTime getLastCharge() {

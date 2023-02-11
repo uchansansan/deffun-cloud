@@ -44,6 +44,7 @@ public class UserService {
         UserEntity userEntity = userRepository.findByEmail(userData.getEmail())
                 .orElseGet(() -> {
                     UserEntity entity = userMapper.userDataToUserEntity(userData);
+                    entity.setBalance(BigDecimal.ZERO);
                     return userRepository.save(entity);
                 });
         return userMapper.userEntityToUserData(userEntity);

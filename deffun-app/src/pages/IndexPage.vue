@@ -6,7 +6,7 @@
           expand-separator
           default-opened
           icon="code"
-          :label="selectedProject.name + ' Schema'"
+          :label="selectedProject.name + ' Schema' + (selectedProject.test ? ' (note: test projects have resource usage limits) ' : '')"
           caption="GraphQL Editor"
           class="full-width"
         >
