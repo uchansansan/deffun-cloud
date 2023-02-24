@@ -3,12 +3,15 @@ type Query {
 }
 
 type Mutation {
+    createProject(name: String): Project!
     createApi(projectId: ID!, schema: String!, name: String, basePackage: String, framework: Framework, database: Database): Project!
     deployApi(projectId: ID!): Project!
 }
 
 type Subscription {
-    deployApiAsync(projectId: ID!): Project!
+    asyncCreateProject(name: String): Project!
+    asyncDeployApi(projectId: ID!): Project!
+    asyncProjects: Project
 }
 
 type Project {

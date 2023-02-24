@@ -22,9 +22,13 @@ import me.atrox.haikunator.Haikunator;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.Validate;
 import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.FluxSink;
+import reactor.core.publisher.Sinks;
 
 import javax.transaction.Transactional;
 import java.io.IOException;
@@ -40,6 +44,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 
 @Singleton
 public class ProjectService {
@@ -58,9 +63,23 @@ public class ProjectService {
             }
             """;
 
+    private Sinks.Many<ProjectData> sink = Sinks.many().multicast().onBackpressureBuffer();
+
+//    private Flux<ProjectData> onCreateStream = Flux.create((Consumer<FluxSink<ProjectData>>) sink -> {
+//        while (!sink.isCancelled()) {
+//            try {
+//                sink.next(projectAsyncRepository.findAll());
+//            } catch (InterruptedException e) {
+//                sink.error(e);
+//            }
+//        }
+//        sink.complete();
+//    }, FluxSink.OverflowStrategy.BUFFER).share();
+
     private final SecurityService securityService;
     private final ProjectMapper projectMapper;
     private final ProjectRepository projectRepository;
+    private final ProjectAsyncRepository projectAsyncRepository;
     private final UserRepository userRepository;
     private final Haikunator haikunator;
     private final Dokku dokku;
@@ -75,7 +94,7 @@ public class ProjectService {
 
     public ProjectService(SecurityService securityService, ProjectMapper projectMapper,
                           ProjectRepository projectRepository,
-                          UserRepository userRepository,
+                          ProjectAsyncRepository projectAsyncRepository, UserRepository userRepository,
                           Haikunator haikunator, Dokku dokku,
                           GitService gitService,
                           @Named("deployment") ExecutorService deploymentExecutor,
@@ -85,6 +104,7 @@ public class ProjectService {
         this.securityService = securityService;
         this.projectMapper = projectMapper;
         this.projectRepository = projectRepository;
+        this.projectAsyncRepository = projectAsyncRepository;
         this.userRepository = userRepository;
         this.haikunator = haikunator;
         this.dokku = dokku;
@@ -96,6 +116,29 @@ public class ProjectService {
     }
 
     public List<ProjectData> projects() {
+        Subscriber<ProjectEntity> subscriber = new Subscriber<>() {
+            @Override
+            public void onSubscribe(Subscription subscription) {
+
+            }
+
+            @Override
+            public void onNext(ProjectEntity entity) {
+
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        };
+        projectAsyncRepository.findAll()
+                .subscribe(subscriber);
         Iterable<ProjectEntity> entities = projectRepository.findAll();
         List<ProjectData> objects = new ArrayList<>();
         for (var entity : entities) {
@@ -163,6 +206,21 @@ public class ProjectService {
         return projectMapper.projectEntityToProjectData(saved);
     }
 
+    @Transactional
+    public ProjectData testCreateProject(CreateProjectData createProjectData) {
+        UserEntity userEntity = new UserEntity();
+        userEntity.setId(1L);
+        ProjectEntity entity = projectMapper.createProjectDataToProjectEntity(createProjectData, userEntity);
+        ProjectEntity saved = projectRepository.save(entity);
+        ProjectData projectData = projectMapper.projectEntityToProjectData(saved);
+        sink.tryEmitNext(projectData);
+        return projectData;
+    }
+
+    public Flux<ProjectData> testGetProjects() {
+        return sink.asFlux();
+    }
+
     @EventListener
     public void onStartup(StartupEvent startupEvent) {
         LOG.info("I'm working in startup");
@@ -174,7 +232,6 @@ public class ProjectService {
                 long hours = between.toHours();
                 Duration duration = Duration.ofHours(1L).minusMinutes(between.toMinutesPart());
                 LOG.info("Redeploy after {} hours and will be charged after {} mins -- project '{}' (ID {})", hours, duration.toMinutes(), project.getName(), project.getId());
-//                long hours = between.get(ChronoUnit.MINUTES);
                 if (hours > 0) {
                     billingService.chargeForHours(project.getId(), hours);
                 }
