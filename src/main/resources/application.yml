@@ -76,9 +76,11 @@ netty:
       max-order: 3
 deffun:
   billing:
-    defaultRubRate: '1.5'
+    rubRate: '${RUB_RATE:`1.5`}'
     chargeDelay: 60
   dokku:
     host: '${DOKKU_HOST}'
     keyFile: '${DOKKU_KEY_FILE}'
     keyPassphrase: '${DOKKU_KEY_PASSPHRASE}'
+    deployment:
+      useHerokuish: '${USE_HEROKUISH:`true`}'

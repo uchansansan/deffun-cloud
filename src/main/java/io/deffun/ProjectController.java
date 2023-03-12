@@ -11,12 +11,16 @@ import io.micronaut.http.annotation.Post;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.rules.SecurityRule;
 import jakarta.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 @Controller("/api/projects")
 @Secured(SecurityRule.IS_ANONYMOUS)
 public class ProjectController {
+    private static final Logger LOG = LoggerFactory.getLogger(ProjectController.class);
+
     @Inject
     private ProjectService projectService;
 
@@ -59,6 +63,7 @@ public class ProjectController {
 
     @Post("{id}/gen_deploy_api")
     public ProjectData genDeployApi(CreateApiData createApiData, @PathVariable("id") Long id) {
+        LOG.info("generate and deploy serialized data {}", createApiData);
         createApiData.setProjectId(id);
         return projectService.generateAndDeploy(createApiData);
     }

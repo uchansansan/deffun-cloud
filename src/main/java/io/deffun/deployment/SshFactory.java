@@ -5,13 +5,10 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.OpenSSHConfig;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.Slf4jLogger;
-import io.deffun.doh.CommandExecutor;
-import io.deffun.doh.Dokku;
-import io.deffun.doh.JSchCommandExecutor;
-import io.deffun.doh.SshUrl;
+import io.deffun.doh.JSchDokkuExecutor;
+import io.deffun.doh.SshDokkuExecutor;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.context.annotation.Value;
-import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import me.atrox.haikunator.Haikunator;
 import org.eclipse.jgit.transport.SshSessionFactory;
@@ -24,8 +21,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @Factory
 public class SshFactory {
@@ -76,9 +71,8 @@ public class SshFactory {
     }
 
     @Singleton
-    public Dokku dokku(JSch jSch, @Value("${deffun.dokku.host}") String host) {
-        CommandExecutor commandExecutor = new JSchCommandExecutor(jSch, new SshUrl("dokku", host));
-        return new Dokku(commandExecutor);
+    public SshDokkuExecutor dokkuExecutor(JSch jSch, @Value("${deffun.dokku.host}") String host) {
+        return new JSchDokkuExecutor(jSch, "dokku", host);
     }
 
     @Singleton

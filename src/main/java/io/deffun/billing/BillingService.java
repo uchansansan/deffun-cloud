@@ -21,7 +21,7 @@ public class BillingService {
     private ProjectRepository projectRepository;
     @Inject
     private UserRepository userRepository;
-    @Value("${deffun.billing.defaultRubRate}")
+    @Value("${deffun.billing.rubRate}")
     private String hourRate;
 
     @Transactional
