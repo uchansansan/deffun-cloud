@@ -108,13 +108,7 @@ const essentialLinks: EssentialLinkProps[] = [
     caption: 'github.com/deffunproject',
     icon: 'code',
     link: 'https://github.com/deffunproject',
-  },
-  {
-    title: 'Twitter',
-    caption: '@deffunproject',
-    icon: 'rss_feed',
-    link: 'https://twitter.com/deffunproject',
-  },
+  }
 ];
 
 const leftDrawerOpen = ref(false);

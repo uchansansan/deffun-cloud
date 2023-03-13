@@ -92,12 +92,13 @@ export const useProjectStore = defineStore('project', {
           return null;
         });
     },
-    async genDeployApi(schema: string) {
+    async genDeployApi(schema: string, database: string) { // todo database as enum
       if (!this.selectedProject) {
         return;
       }
       const data: CreateApiData = {
-        schema: schema
+        schema: schema,
+        database: database,
       };
       this.selectedProject = await api
         .post<ProjectData>(

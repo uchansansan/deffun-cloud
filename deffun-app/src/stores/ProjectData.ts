@@ -14,4 +14,5 @@ export interface CreateProjectData {
 
 export interface CreateApiData {
   schema: string;
+  database: string;
 }

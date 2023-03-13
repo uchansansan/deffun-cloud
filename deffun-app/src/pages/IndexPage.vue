@@ -30,7 +30,7 @@
             <q-btn
               color="primary"
               label="Deploy API"
-              @click="genDeployApi(newSchema)"
+              @click="genDeployApi(newSchema, selectedDatabase)"
               :icon-right="mdiPlayOutline"
               :disable="selectedProject.deploying"
               :loading="selectedProject.deploying"
@@ -45,6 +45,22 @@
             </q-btn>
           </div>
         </div>
+        <q-expansion-item
+          icon="settings"
+          label="Settings"
+          caption="Settings"
+          class="full-width">
+          <q-select filled color="purple-12" v-model="selectedDatabase" :options="databaseOptions" label="Daatabase" />
+          <!-- todo: btw mongo should be available only for paid user (not a test projects) -->
+          <div v-if="selectedDatabase === 'MONGODB'">
+            <q-checkbox v-model="useOwnMongoDb" label="Use own MongoDB installation" />
+            <div v-if="useOwnMongoDb">
+              <q-card v-model="mongoSettings">
+                <q-input label="Connection string" disable />
+              </q-card>
+            </div>
+          </div>
+        </q-expansion-item>
         <div v-if="selectedProject.apiEndpointUrl">
           <q-card>
             <q-card-section>
@@ -124,6 +140,15 @@ const opts = ref({
   language: 'graphql',
   formatOnPaste: true,
 });
+
+const selectedDatabase = ref('MARIADB');
+const databaseOptions = [
+        'MARIADB',
+        'MYSQL',
+        'POSTGRES',
+        'MONGODB'
+];
+const useOwnMongoDb = ref(false);
 
 //function editorDid(editor: IStandaloneCodeEditor) {
 //  editor.updateOptions();
