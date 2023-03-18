@@ -3,8 +3,14 @@ package io.deffun;
 import io.deffun.billing.BillingService;
 import io.deffun.deployment.DokkuService;
 import io.deffun.deployment.GitService;
+import io.deffun.deployment.K8sService;
+import io.deffun.gen.BuildTool;
 import io.deffun.gen.Database;
-import io.deffun.gen.Deffun;
+import io.deffun.gen.DbVersioningTool;
+import io.deffun.gen.DeffunConfig;
+import io.deffun.gen.DeffunProject;
+import io.deffun.gen.Framework;
+import io.deffun.gen.Language;
 import io.deffun.usermgmt.UserEntity;
 import io.deffun.usermgmt.UserRepository;
 import io.micronaut.context.annotation.Value;
@@ -12,8 +18,11 @@ import io.micronaut.context.event.StartupEvent;
 import io.micronaut.runtime.event.annotation.EventListener;
 import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.TaskScheduler;
+import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.authentication.Authentication;
+import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.security.utils.SecurityService;
+import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import me.atrox.haikunator.Haikunator;
@@ -32,6 +41,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -51,6 +61,8 @@ public class ProjectService {
               create(name: String): MyType
             }
             """;
+
+    private static final Path PROJECTS = Paths.get(System.getProperty("user.home"), "projects");
 
     private final SecurityService securityService;
     private final ProjectMapper projectMapper;
@@ -274,26 +286,21 @@ public class ProjectService {
         projectRepository.update(data.getProjectId(), true, appName, database);
         deploymentExecutor.submit(() -> {
             try {
-                Path projects = Paths.get(System.getProperty("user.home"), "projects", "deffun", "deffun-tests");
                 if (projectEntity.getApiEndpointUrl() != null) {
                     LOG.info(">>> delete app");
                     dokkuService.deleteDokkuApp(appName, database);
                     LOG.info(">>> app deleted");
                     try {
-                        FileUtils.deleteDirectory(projects.resolve(appName).toFile());
+                        FileUtils.deleteDirectory(PROJECTS.resolve(appName).toFile());
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                     projectRepository.update(data.getProjectId(), null);
                 }
-                Deffun.Parameters parameters = Deffun.parameters()
-                        .appName(appName)
-                        .basePackage("app.deffun")
-                        .schemaContent(projectEntity.getSchema())
-                        .database(database)
-                        .output(projects)
-                        .get();
-                Path path = Deffun.generateProject(parameters);
+                DeffunConfig config = new DeffunConfig(appName, "app.deffun", Language.JAVA, BuildTool.MAVEN, Framework.MICRONAUT, database, DbVersioningTool.FLYWAY, Collections.emptySet());
+                DeffunProject deffunProject = DeffunProject.newProject(config);
+                deffunProject.generateAndPersistBySchema(projectEntity.getSchema(), PROJECTS);
+                Path path = PROJECTS.resolve(appName);
                 LOG.info("app name {} and path {}", appName, path);
 
                 dokkuService.setupDokkuApp(appName, database, currentUserEmail());
@@ -302,7 +309,9 @@ public class ProjectService {
                 projectRepository.update(data.getProjectId(), false, "https://%s.deffun.app".formatted(appName), LocalDateTime.now());
 
                 // task can be canceled, but we should save the reference of the returned `ScheduledFuture<?>` for this
-                taskScheduler.scheduleAtFixedRate(getDelay(), getDelay(), () -> billingService.updateBalance(projectEntity.getId()));
+                if (!projectEntity.isTest()) {
+                    taskScheduler.scheduleAtFixedRate(getDelay(), getDelay(), () -> billingService.updateBalance(projectEntity.getId()));
+                }
             } catch (Exception e) {
                 LOG.info("some problem occurred", e);
                 projectRepository.update(data.getProjectId(), false, null, (LocalDateTime) null);
@@ -327,6 +336,27 @@ public class ProjectService {
             entity.setUser(userEntity);
             projectRepository.save(entity);
         }
+    }
+
+    @Secured(SecurityRule.IS_AUTHENTICATED)
+    public ProjectData setEnvVar(Long projectId, SetEnvVarData setEnvVarData) {
+        ProjectEntity fetched = projectRepository.findById(projectId).orElseThrow();
+        dokkuService.setEnvVar(fetched.getApiName(), setEnvVarData.getKey(), setEnvVarData.getValue());
+        return projectMapper.projectEntityToProjectData(fetched);
+    }
+
+    @Secured(SecurityRule.IS_AUTHENTICATED)
+    public ProjectData addOAuthProvider(Long projectId, OAuthProviderInput providerInput) {
+        ProjectEntity fetched = projectRepository.findById(projectId).orElseThrow();
+        Path projectDir = PROJECTS.resolve(fetched.getApiName());
+        DeffunProject deffunProject = DeffunProject.loadFromFileSystem(projectDir);
+        deffunProject.addOAuthProvider(providerInput.getProvider(), (clientId, clientSecret) -> {
+            dokkuService.setEnvVar(fetched.getApiName(), clientId, providerInput.getClientId());
+            dokkuService.setEnvVar(fetched.getApiName(), clientSecret, providerInput.getClientSecret());
+        });
+        // commit and push
+        gitService.commit(projectDir, "Add OAuth");
+        return projectMapper.projectEntityToProjectData(fetched);
     }
 
     private Duration getDelay() {

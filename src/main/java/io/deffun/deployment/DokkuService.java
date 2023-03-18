@@ -62,6 +62,10 @@ public class DokkuService {
         });
     }
 
+    public void setEnvVar(String appName, String key, String value) {
+        sshDokkuExecutor.session(dokku -> dokku.config().set(appName, key, value));
+    }
+
     private static DatabasePlugin getDatabasePlugin(Dokku dokku, Database database) {
         return switch (database) {
             case MYSQL -> dokku.mySqlPlugin();

@@ -23,7 +23,9 @@ public class GraphQLFactory {
                            CreateApiDataFetcher createApiDataFetcher,
                            DeployApiDataFetcher deployApiDataFetcher,
                            DeployApiAsyncDataFetcher deployApiAsyncDataFetcher,
-                           CreateProjectDataFetcher createProjectDataFetcher
+                           CreateProjectDataFetcher createProjectDataFetcher,
+                           SetEnvVarDataFetcher setEnvVarDataFetcher,
+                           AddOAuthProviderDataFetcher addOAuthProviderDataFetcher
     ) {
         SchemaParser schemaParser = new SchemaParser();
         SchemaGenerator schemaGenerator = new SchemaGenerator();
@@ -40,6 +42,8 @@ public class GraphQLFactory {
                 .type("Mutation", typeWiring -> typeWiring.dataFetcher("createProject", createProjectDataFetcher))
                 .type("Mutation", typeWiring -> typeWiring.dataFetcher("createApi", createApiDataFetcher))
                 .type("Mutation", typeWiring -> typeWiring.dataFetcher("deployApi", deployApiDataFetcher))
+                .type("Mutation", typeWiring -> typeWiring.dataFetcher("setEnvVar", setEnvVarDataFetcher))
+                .type("Mutation", typeWiring -> typeWiring.dataFetcher("addOAuthProvider", addOAuthProviderDataFetcher))
                 .type("Subscription", typeWiring -> typeWiring.dataFetcher("asyncDeployApi", deployApiAsyncDataFetcher))
                 .build();
 

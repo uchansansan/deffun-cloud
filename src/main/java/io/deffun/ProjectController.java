@@ -68,9 +68,23 @@ public class ProjectController {
         return projectService.generateAndDeploy(createApiData);
     }
 
+    @Post("{id}/setenv")
+    public ProjectData setEnvVar(SetEnvVarData setEnvVarData, @PathVariable("id") Long id) {
+        return projectService.setEnvVar(id, setEnvVarData);
+    }
+
+    @Post("{id}/add_oauth")
+    public ProjectData addOAuth(OAuthProviderInput oAuthProviderInput, @PathVariable("id") Long id) {
+        LOG.info("add oauth for provider {}", oAuthProviderInput.getProvider());
+        return projectService.addOAuthProvider(id, oAuthProviderInput);
+    }
+
     @Post("{id}/deploy_api")
     public ProjectData deploy(@PathVariable("id") Long id) {
 //        (io.micronaut.http.HttpHeaders httpHeaders)
+        //https://www.javacodemonk.com/generating-cryptographically-strong-key-secret-in-java-82749205
+        //https://blog.mergify.com/api-keys-best-practice/
+        //https://stackoverflow.com/questions/14412132/whats-the-best-approach-for-generating-a-new-api-key
 //        String apiKey = httpHeaders.get("X-DEFFUN-API-KEY");
         DeployApiData data = new DeployApiData(); // move to method params if other then id is needed
         data.setProjectId(id);

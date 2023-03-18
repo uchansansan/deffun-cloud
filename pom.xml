@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.deffun</groupId>
     <artifactId>deffun-cloud</artifactId>
-    <version>0.5</version>
+    <version>0.7</version>
     <packaging>${packaging}</packaging>
 
     <parent>
@@ -128,8 +128,8 @@
 
         <dependency>
             <groupId>io.deffun</groupId>
-            <artifactId>deffun-cli</artifactId>
-            <version>0.0.1</version>
+            <artifactId>deffun-gen</artifactId>
+            <version>0.0.2</version>
         </dependency>
 
         <!-- utils -->

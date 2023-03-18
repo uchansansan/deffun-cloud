@@ -33,7 +33,7 @@ public class BillingService {
     public void chargeForHours(Long id, long hours) {
         projectRepository.findById(id)
                 .ifPresentOrElse(project -> {
-                    if (project.getApiEndpointUrl() != null) {
+                    if (!project.isTest() && project.getApiEndpointUrl() != null) {
                         LOG.info("Hourly balance update for project '{}' (ID {})", project.getName(), project.getId());
                         UserEntity user = project.getUser();
                         BigDecimal subtrahend = new BigDecimal(hourRate);

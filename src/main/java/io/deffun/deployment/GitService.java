@@ -50,6 +50,17 @@ public class GitService {
         }
     }
 
+    public void commit(Path path, String message) {
+        try (Git git = Git.open(path.toFile())) {
+            git.add().addFilepattern(".").call();
+            git.commit().setMessage(message).call();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (GitAPIException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public void pushRepository(Path path) {
         try (Git git = Git.open(path.toFile())) {
             //git push dokku main:master

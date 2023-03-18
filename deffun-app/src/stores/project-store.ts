@@ -1,6 +1,15 @@
 import { defineStore } from 'pinia';
 import { api } from 'boot/axios';
-import { ProjectData, CreateProjectData, CreateApiData } from './ProjectData';
+import {
+  ProjectData,
+  CreateProjectData,
+  CreateApiData,
+  SetEnvData,
+  AddOAuthData,
+} from './ProjectData';
+import { useMutation, useQuery } from '@urql/vue';
+import { graphql } from '../gql';
+import { createClient, provideClient } from '@urql/vue';
 
 export const useProjectStore = defineStore('project', {
   state: () => ({
@@ -92,7 +101,8 @@ export const useProjectStore = defineStore('project', {
           return null;
         });
     },
-    async genDeployApi(schema: string, database: string) { // todo database as enum
+    async genDeployApi(schema: string, database: string) {
+      // todo database as enum
       if (!this.selectedProject) {
         return;
       }
@@ -126,5 +136,66 @@ export const useProjectStore = defineStore('project', {
           return null;
         });
     },
+    async setEnvVar(key: string, value: string) {
+      const data: SetEnvData = {
+        key: key,
+        value: value,
+      };
+      await api
+        .post<ProjectData>(
+          '/projects/' + this.selectedProject.id + '/setenv',
+          data
+        )
+        .then((response) => {
+          return response.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return null;
+        });
+    },
+    async addOAuth(provider: string, clientId: string, clientSecret: string) {
+      const data: AddOAuthData = {
+        provider: provider,
+        clientId: clientId,
+        clientSecret: clientSecret,
+      };
+      await api
+        .post<ProjectData>(
+          '/projects/' + this.selectedProject.id + '/add_oauth',
+          data
+        )
+        .then((response) => {
+          return response.data;
+        })
+        .catch((err) => {
+          console.log(err);
+          return null;
+        });
+    },
+    // async setEnvVar(key: string, value: string) {
+    //   const client = createClient({
+    //     url: 'http://localhost:8080/graphql',
+    //   });
+
+    //   provideClient(client);
+    //   const setEnvVar = useMutation(`
+    //       mutation ($projectId: ID!, $key: String!, $value: String!) {
+    //         setEnvVar(projectId: $projectId, key: $key, value: $value) {
+    //           id
+    //         }
+    //       }
+    //     `);
+    //   const variables = {
+    //     projectId: this.selectedProject.id,
+    //     key: key,
+    //     value: value,
+    //   };
+    //   setEnvVar.executeMutation(variables).then((result) => {
+    //     console.log(result);
+    //   });
+    //   // `films` is typed!
+    //   //      const films = computed(() => data.value?.allFilms?.edges?.map(e => e?.node!))
+    // },
   },
 });

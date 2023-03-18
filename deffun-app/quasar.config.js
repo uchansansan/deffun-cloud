@@ -66,6 +66,7 @@ module.exports = configure(function (/* ctx */) {
       env: {
 //        API_BASE_URL: 'http://localhost:8080/api',
         API_BASE_URL: 'https://studio.deffun.io/api',
+//        API_BASE_URL: 'https://test.deffun.io/api',
       },
       // rawDefine: {}
       // ignorePublicFolder: true,
