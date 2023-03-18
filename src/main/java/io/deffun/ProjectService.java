@@ -356,6 +356,7 @@ public class ProjectService {
         });
         // commit and push
         gitService.commit(projectDir, "Add OAuth");
+        gitService.pushRepository(projectDir);
         return projectMapper.projectEntityToProjectData(fetched);
     }
 

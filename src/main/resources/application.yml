@@ -23,15 +23,6 @@ micronaut:
     redirect:
       unauthorized:
         url: "/login"
-    intercept-url-map:
-      - pattern: "/**"
-        httpMethod: GET
-        access:
-          - isAnonymous()
-      - pattern: "/graphql"
-        httpMethod: POST
-        access:
-          - isAnonymous()
     endpoints:
       logout:
         get-allowed: true
