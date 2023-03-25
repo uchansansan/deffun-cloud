@@ -32,6 +32,10 @@ micronaut:
         httpMethod: POST
         access:
           - isAnonymous()
+      - pattern: "/api/users/upload_file"
+        httpMethod: POST
+        access:
+          - isAnonymous()
     endpoints:
       logout:
         get-allowed: true
