@@ -2,11 +2,8 @@ package io.deffun;
 
 import io.deffun.usermgmt.UserData;
 import io.deffun.usermgmt.UserService;
-import io.micronaut.core.annotation.Nullable;
 import io.micronaut.http.HttpResponse;
-import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.*;
-import io.micronaut.http.multipart.CompletedFileUpload;
 import io.micronaut.http.multipart.StreamingFileUpload;
 import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.annotation.ExecuteOn;
@@ -17,13 +14,9 @@ import jakarta.inject.Inject;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
-import java.io.ByteArrayOutputStream;
+
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import static io.micronaut.http.HttpStatus.CONFLICT;
 import static io.micronaut.http.MediaType.MULTIPART_FORM_DATA;
@@ -45,7 +38,6 @@ public class UserController {
     @ExecuteOn(TaskExecutors.IO)
     @Post(value = "/upload_file", consumes = MULTIPART_FORM_DATA, produces = TEXT_PLAIN)
     public Publisher<HttpResponse<String>> upload(StreamingFileUpload file) {
-        System.out.println(file.getFilename());
         File tempFile;
         try {
             tempFile = File.createTempFile(file.getFilename(), "temp");
