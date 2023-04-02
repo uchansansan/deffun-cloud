@@ -3,6 +3,8 @@ package io.deffun;
 import io.deffun.usermgmt.UserData;
 import io.deffun.usermgmt.UserService;
 import io.micronaut.http.HttpResponse;
+import io.micronaut.http.HttpStatus;
+import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.*;
 import io.micronaut.http.multipart.StreamingFileUpload;
 import io.micronaut.scheduling.TaskExecutors;
@@ -15,9 +17,6 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 import java.io.File;
 import java.io.IOException;
-import static io.micronaut.http.HttpStatus.CONFLICT;
-import static io.micronaut.http.MediaType.MULTIPART_FORM_DATA;
-import static io.micronaut.http.MediaType.TEXT_PLAIN;
 
 @Controller("/api/users")
 @Secured(SecurityRule.IS_ANONYMOUS)
@@ -33,7 +32,7 @@ public class UserController {
 
 
     @ExecuteOn(TaskExecutors.IO)
-    @Post(value = "/upload_file", consumes = MULTIPART_FORM_DATA, produces = TEXT_PLAIN)
+    @Post(value = "/upload_file", consumes = MediaType.MULTIPART_FORM_DATA, produces = MediaType.TEXT_PLAIN)
     public Publisher<HttpResponse<String>> upload(StreamingFileUpload file) {
         File tempFile;
         try {
@@ -48,7 +47,7 @@ public class UserController {
                     if (success) {
                         return HttpResponse.ok("Uploaded");
                     } else {
-                        return HttpResponse.<String>status(CONFLICT)
+                        return HttpResponse.<String>status(HttpStatus.CONFLICT)
                                 .body("Upload Failed");
                     }
                 });
